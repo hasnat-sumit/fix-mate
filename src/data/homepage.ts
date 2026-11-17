@@ -21,8 +21,8 @@ export type FeaturedService = {
   technician: string;
   rating: number;
   reviewCount: number;
-  icon: IconName;
-  artTone: "sand" | "sage" | "sky" | "lilac" | "rose";
+  image: string;
+  imageAlt: string;
   tag: string;
 };
 
@@ -52,8 +52,8 @@ export const featuredServices: FeaturedService[] = [
     technician: "Amira Chen",
     rating: 4.9,
     reviewCount: 128,
-    icon: "smartphone",
-    artTone: "sand",
+    image: "/images/smartphone-screen-repair.webp",
+    imageAlt: "Technician repairing a smartphone with a precision screwdriver",
     tag: "Most requested",
   },
   {
@@ -64,8 +64,8 @@ export const featuredServices: FeaturedService[] = [
     technician: "Daniel Foster",
     rating: 4.8,
     reviewCount: 94,
-    icon: "laptop",
-    artTone: "sky",
+    image: "/images/laptop-repair.webp",
+    imageAlt: "Technician carefully working on an open laptop",
     tag: "Same-day slots",
   },
   {
@@ -76,20 +76,20 @@ export const featuredServices: FeaturedService[] = [
     technician: "Rafiq Hasan",
     rating: 5.0,
     reviewCount: 76,
-    icon: "air-conditioning",
-    artTone: "sage",
+    image: "/images/air-conditioner-service.webp",
+    imageAlt: "Technician servicing a wall-mounted air conditioner",
     tag: "Home comfort",
   },
   {
-    id: "washer-repair",
-    name: "Washing machine repair",
-    description: "Help with leaks, drainage issues and noisy spin cycles.",
+    id: "refrigerator-maintenance",
+    name: "Refrigerator maintenance",
+    description: "Routine care to keep your refrigerator clean and running well.",
     startingPrice: 55,
     technician: "Priya Nair",
     rating: 4.9,
     reviewCount: 112,
-    icon: "appliance",
-    artTone: "lilac",
+    image: "/images/refrigerator-maintenance.webp",
+    imageAlt: "Hands cleaning a stainless steel refrigerator",
     tag: "Trusted locally",
   },
   {
@@ -100,8 +100,8 @@ export const featuredServices: FeaturedService[] = [
     technician: "Mateo Alvarez",
     rating: 4.8,
     reviewCount: 63,
-    icon: "television",
-    artTone: "rose",
+    image: "/images/television-repair.webp",
+    imageAlt: "Technician repairing the internal components of a television",
     tag: "Clear diagnosis",
   },
   {
@@ -112,8 +112,8 @@ export const featuredServices: FeaturedService[] = [
     technician: "Grace Okafor",
     rating: 4.9,
     reviewCount: 87,
-    icon: "electrical",
-    artTone: "sand",
+    image: "/images/electrical-service.webp",
+    imageAlt: "Electrician safely inspecting an electrical control panel",
     tag: "Safety first",
   },
 ];
