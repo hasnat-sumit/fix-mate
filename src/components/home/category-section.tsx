@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { CategoryCard } from "@/components/category-card";
 import { Container } from "@/components/container";
 import { SectionHeading } from "@/components/section-heading";
-import { serviceCategories } from "@/data/homepage";
+import { serviceCategories } from "@/data/services";
 
 export function CategorySection() {
   return (
@@ -13,9 +13,9 @@ export function CategorySection() {
           <SectionHeading
             eyebrow="Find your fix"
             title="Expert help for the things you rely on."
-            description="From a cracked screen to a quieter washing machine, find the right kind of care for your home and devices."
+            description="From a cracked screen to a refrigerator that needs care, find the right help for your home and devices."
           />
-          <Link href="#featured-services" className="mb-1 inline-flex w-fit items-center gap-2 text-sm font-bold text-foreground transition-colors hover:text-accent">
+          <Link href="/services" className="mb-1 inline-flex w-fit items-center gap-2 text-sm font-bold text-foreground transition-colors hover:text-accent">
             Browse all services <ArrowRight aria-hidden="true" className="size-4" />
           </Link>
         </div>

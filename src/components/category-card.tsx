@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { ServiceCategory } from "@/data/homepage";
+import { serviceCategorySlug, type ServiceCategory } from "@/data/services";
 import { RepairIcon } from "@/components/repair-icon";
 
 type CategoryCardProps = {
@@ -11,7 +11,7 @@ type CategoryCardProps = {
 export function CategoryCard({ category, index }: CategoryCardProps) {
   return (
     <Link
-      href="#featured-services"
+      href={`/services?category=${serviceCategorySlug(category.name)}`}
       className="group flex min-h-[158px] flex-col rounded-2xl border border-border/90 bg-card p-5 transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_14px_36px_rgba(20,44,60,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
     >
       <div className="mb-5 flex items-start justify-between">

@@ -5,14 +5,15 @@ import { FixMateLogo } from "@/components/fixmate-logo";
 
 const footerLinks = {
   Explore: [
-    { label: "Home", href: "#home" },
-    { label: "Services", href: "#categories" },
-    { label: "How it works", href: "#how-it-works" },
+    { label: "Home", href: "/" },
+    { label: "Services", href: "/services" },
+    { label: "About", href: "/about" },
+    { label: "How it works", href: "/#how-it-works" },
   ],
   Services: [
-    { label: "Phones & computers", href: "#categories" },
-    { label: "Home appliances", href: "#categories" },
-    { label: "Home services", href: "#categories" },
+    { label: "Phones & computers", href: "/services?category=smartphone" },
+    { label: "Home appliances", href: "/services?category=home-appliances" },
+    { label: "Home services", href: "/services?category=electrical-services" },
   ],
 };
 
@@ -58,7 +59,7 @@ export function PublicFooter() {
             <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-white/45">Get in touch</h2>
             <p className="mt-5 text-sm font-semibold text-white/85">We’re building a better repair experience.</p>
             <p className="mt-2 text-sm leading-6 text-white/55">Contact details will be available soon.</p>
-            <Link href="#technicians" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-hero-highlight hover:text-white">
+            <Link href="/#technicians" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-hero-highlight hover:text-white">
               Join our network <ArrowUpRight aria-hidden="true" className="size-4" />
             </Link>
           </div>

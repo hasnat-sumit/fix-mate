@@ -8,7 +8,7 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import type { IconName } from "@/data/homepage";
+import type { IconName } from "@/data/services";
 
 const icons: Record<IconName, LucideIcon> = {
   smartphone: Smartphone,

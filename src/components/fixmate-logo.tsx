@@ -8,7 +8,7 @@ type FixMateLogoProps = {
 export function FixMateLogo({ light = false }: FixMateLogoProps) {
   return (
     <Link
-      href="#home"
+      href="/"
       className="inline-flex shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
       aria-label="FixMate home"
     >

@@ -5,12 +5,11 @@ import {
   ArrowRight,
   CheckCircle2,
   Search,
-  Star,
 } from "lucide-react";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
 
-const confidencePoints = ["Verified Technicians", "Pay After Service", "Customer Reviews"];
+const confidencePoints = ["Compare service details", "Clear starting prices", "Pay after service"];
 
 export function HeroSection() {
   return (
@@ -28,13 +27,13 @@ export function HeroSection() {
             Find trusted technicians for smartphones, computers and home appliances. Book repairs with confidence and pay after the job is done.
           </p>
 
-          <form action="#featured-services" method="get" role="search" className="mt-8 flex max-w-[560px] flex-col gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_10px_34px_rgba(20,44,60,0.07)] sm:flex-row sm:items-center">
+          <form action="/services" method="get" role="search" className="mt-8 flex max-w-[560px] flex-col gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_10px_34px_rgba(20,44,60,0.07)] sm:flex-row sm:items-center">
             <label className="flex min-h-12 min-w-0 flex-1 items-center gap-3 px-3">
               <Search aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
               <span className="sr-only">Search for a repair service</span>
               <input
                 type="search"
-                name="service"
+                name="q"
                 placeholder="What needs fixing?"
                 className="w-full min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
               />
@@ -52,19 +51,13 @@ export function HeroSection() {
             ))}
           </div>
 
-          <div className="mt-9 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-border pt-6">
-            <div className="flex shrink-0 -space-x-2" aria-hidden="true">
-              <span className="flex size-9 items-center justify-center rounded-full border-2 border-background bg-art-sand text-[11px] font-bold text-foreground">AM</span>
-              <span className="flex size-9 items-center justify-center rounded-full border-2 border-background bg-art-sage text-[11px] font-bold text-foreground">DF</span>
-              <span className="flex size-9 items-center justify-center rounded-full border-2 border-background bg-art-sky text-[11px] font-bold text-foreground">RH</span>
-              <span className="flex size-9 items-center justify-center rounded-full border-2 border-background bg-accent text-[11px] font-bold text-accent-foreground">+</span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-                <span className="inline-flex items-center gap-1"><Star aria-hidden="true" className="size-3.5 fill-warning text-warning" /> 4.9</span>
-                <span className="font-medium text-muted-foreground">from happy customers</span>
-              </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">A better repair starts with the right people.</p>
+          <div className="mt-9 flex items-center gap-3 border-t border-border pt-6">
+            <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-accent">
+              <CheckCircle2 className="size-[18px]" />
+            </span>
+            <div>
+              <p className="text-sm font-bold text-foreground">Repair with Confidence</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Thoughtful service details and clear next steps.</p>
             </div>
           </div>
         </div>

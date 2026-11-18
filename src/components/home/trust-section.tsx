@@ -10,16 +10,16 @@ import { Container } from "@/components/container";
 import { SectionHeading } from "@/components/section-heading";
 
 const trustFeatures: { title: string; description: string; icon: LucideIcon }[] = [
-  { title: "Verified technicians", description: "Know who’s coming to help before work begins.", icon: BadgeCheck },
-  { title: "Transparent pricing", description: "See a clear starting price before you send a request.", icon: CircleDollarSign },
-  { title: "Secure payments", description: "Your payment is handled with care and security.", icon: ShieldCheck },
-  { title: "Helpful reviews", description: "Choose with confidence from real customer feedback.", icon: MessageSquareQuote },
-  { title: "Repair progress", description: "Stay informed from your first request to completion.", icon: Waypoints },
+  { title: "Clear service details", description: "Compare what each repair includes before making a request.", icon: BadgeCheck },
+  { title: "Upfront starting prices", description: "Listings show example starting prices to help you compare.", icon: CircleDollarSign },
+  { title: "Pay after service", description: "The FixMate experience is designed around completed repairs.", icon: ShieldCheck },
+  { title: "Provider information", description: "Review service provider details before requesting help.", icon: MessageSquareQuote },
+  { title: "Repair progress", description: "The service experience is designed to keep customers informed.", icon: Waypoints },
 ];
 
 export function TrustSection() {
   return (
-    <section id="about" className="overflow-hidden bg-hero py-20 text-hero-foreground sm:py-24 lg:py-28">
+    <section id="why-fixmate" className="overflow-hidden bg-hero py-20 text-hero-foreground sm:py-24 lg:py-28">
       <Container>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-end lg:gap-16">
           <SectionHeading
