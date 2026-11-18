@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { isActiveNavLink, publicNavLinks } from "@/lib/navigation";
+import { PlannedLink } from "@/components/planned-link";
+import { isActiveNavLink, plannedAuthLinks, publicNavLinks } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type MobileNavigationProps = {
@@ -48,9 +49,11 @@ export function MobileNavigation({ onNavigate }: MobileNavigationProps) {
         })}
       </nav>
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-        <Link href="/#footer" onClick={onNavigate} className="px-3 text-sm font-semibold text-muted-foreground hover:text-foreground">
-          Sign in
-        </Link>
+        <PlannedLink
+          link={plannedAuthLinks.signIn}
+          onNavigate={onNavigate}
+          className="px-3 text-sm font-semibold text-muted-foreground hover:text-foreground"
+        />
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <Button asChild className="h-11 rounded-full px-5">

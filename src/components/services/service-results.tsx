@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Search, SearchX, SlidersHorizontal } from "lucide-react";
 import { ServiceCard } from "@/components/service-card";
+import { ServicesSearchForm } from "@/components/services/services-search-form";
 import { Button } from "@/components/ui/button";
 import { serviceCategories, serviceCategorySlug, services, type ServiceSort } from "@/data/services";
+import { buildServicesHref, defaultServiceSort } from "@/lib/services-url";
 import { cn } from "@/lib/utils";
 
 export type ServicesSearchParams = Record<string, string | string[] | undefined>;
@@ -35,7 +37,7 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
   const query = firstValue(params.q)?.trim() ?? "";
   const category = firstValue(params.category) ?? "";
   const requestedSort = firstValue(params.sort);
-  const sort: ServiceSort = isServiceSort(requestedSort) ? requestedSort : "featured";
+  const sort: ServiceSort = isServiceSort(requestedSort) ? requestedSort : defaultServiceSort;
   const requestedPage = Number(firstValue(params.page) ?? "1");
   const isKnownCategory = serviceCategories.some((item) => serviceCategorySlug(item.name) === category);
 
@@ -52,21 +54,16 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
   const page = Number.isInteger(requestedPage) ? Math.min(Math.max(requestedPage, 1), pageCount) : 1;
   const startIndex = (page - 1) * pageSize;
   const pageServices = matchingServices.slice(startIndex, startIndex + pageSize);
-  const hasActiveFilters = Boolean(query || category || sort !== "featured");
+  const hasActiveFilters = Boolean(query || category || sort !== defaultServiceSort);
 
   function pageHref(pageNumber: number) {
-    const nextParams = new URLSearchParams();
-    if (query) nextParams.set("q", query);
-    if (category) nextParams.set("category", category);
-    if (sort !== "featured") nextParams.set("sort", sort);
-    if (pageNumber > 1) nextParams.set("page", String(pageNumber));
-    const search = nextParams.toString();
-    return search ? `/services?${search}` : "/services";
+    return buildServicesHref({ q: query, category, sort, page: pageNumber });
   }
 
   return (
     <>
-      <form action="/services" method="get" role="search" aria-label="Search and filter services" className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+      {/* Keyed on the active filters so uncontrolled fields reset after client navigation (e.g. Clear filters). */}
+      <ServicesSearchForm key={pageHref(1)} role="search" aria-label="Search and filter services" className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
         <div className="mb-4 flex items-center gap-2 text-sm font-bold text-foreground">
           <SlidersHorizontal aria-hidden="true" className="size-4 text-accent" />
           Search and refine services
@@ -108,7 +105,7 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
             Apply filters
           </Button>
         </div>
-      </form>
+      </ServicesSearchForm>
 
       <div className="mt-10 flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>

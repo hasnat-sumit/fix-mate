@@ -2,10 +2,13 @@ import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, Check, UsersRound } from "lucide-react";
 import { Container } from "@/components/container";
 import { Button } from "@/components/ui/button";
+import { plannedAuthLinks } from "@/lib/navigation";
 
 const benefits = ["Connect with customers nearby", "Build a reputation that travels", "Grow at a pace that works for you"];
 
 export function TechnicianCtaSection() {
+  const signupLink = plannedAuthLinks.technicianSignup;
+
   return (
     <section id="technicians" className="py-20 sm:py-24 lg:py-28">
       <Container>
@@ -37,10 +40,18 @@ export function TechnicianCtaSection() {
                 <span className="flex size-9 items-center justify-center rounded-lg bg-accent/10 text-accent"><UsersRound aria-hidden="true" className="size-[18px]" /></span>
                 <span className="text-xs font-semibold leading-5 text-muted-foreground">A network built around<br /><strong className="text-foreground">quality work</strong></span>
               </div>
-              <Button asChild className="h-12 rounded-xl px-6">
-                <Link href="#footer">Join FixMate <ArrowRight aria-hidden="true" className="size-4" /></Link>
-              </Button>
-              <p className="text-xs text-muted-foreground">Technician registration is coming soon.</p>
+              {signupLink.href ? (
+                <Button asChild className="h-12 rounded-xl px-6">
+                  <Link href={signupLink.href}>{signupLink.label} <ArrowRight aria-hidden="true" className="size-4" /></Link>
+                </Button>
+              ) : (
+                <>
+                  <Button type="button" disabled aria-describedby="technician-signup-note" className="h-12 rounded-xl px-6">
+                    {signupLink.label} <ArrowRight aria-hidden="true" className="size-4" />
+                  </Button>
+                  <p id="technician-signup-note" className="text-xs text-muted-foreground">Technician registration is coming soon.</p>
+                </>
+              )}
             </div>
           </div>
         </div>

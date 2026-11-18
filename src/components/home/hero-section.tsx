@@ -7,6 +7,7 @@ import {
   Search,
 } from "lucide-react";
 import { Container } from "@/components/container";
+import { ServicesSearchForm } from "@/components/services/services-search-form";
 import { Button } from "@/components/ui/button";
 
 const confidencePoints = ["Compare service details", "Clear starting prices", "Pay after service"];
@@ -27,7 +28,7 @@ export function HeroSection() {
             Find trusted technicians for smartphones, computers and home appliances. Book repairs with confidence and pay after the job is done.
           </p>
 
-          <form action="/services" method="get" role="search" className="mt-8 flex max-w-[560px] flex-col gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_10px_34px_rgba(20,44,60,0.07)] sm:flex-row sm:items-center">
+          <ServicesSearchForm role="search" aria-label="Search for a repair service" className="mt-8 flex max-w-[560px] flex-col gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_10px_34px_rgba(20,44,60,0.07)] sm:flex-row sm:items-center">
             <label className="flex min-h-12 min-w-0 flex-1 items-center gap-3 px-3">
               <Search aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
               <span className="sr-only">Search for a repair service</span>
@@ -41,7 +42,7 @@ export function HeroSection() {
             <Button type="submit" className="h-12 rounded-xl px-5 sm:px-6">
               Find a service <ArrowRight aria-hidden="true" className="size-4" />
             </Button>
-          </form>
+          </ServicesSearchForm>
 
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5">
             {confidencePoints.map((point) => (

@@ -9,7 +9,8 @@ import { FixMateLogo } from "@/components/fixmate-logo";
 import { MobileNavigation } from "@/components/mobile-navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { isActiveNavLink, publicNavLinks } from "@/lib/navigation";
+import { PlannedLink } from "@/components/planned-link";
+import { isActiveNavLink, plannedAuthLinks, publicNavLinks } from "@/lib/navigation";
 
 export function PublicNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,9 +40,10 @@ export function PublicNavbar() {
 
         <div className="hidden items-center gap-2 md:flex lg:gap-3">
           <ThemeToggle />
-            <Link href="/#footer" className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-            Sign in
-          </Link>
+          <PlannedLink
+            link={plannedAuthLinks.signIn}
+            className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          />
           <Button asChild className="h-11 rounded-full px-4 lg:px-5">
             <Link href="/services">
               Get started <ArrowUpRight aria-hidden="true" className="size-4" />

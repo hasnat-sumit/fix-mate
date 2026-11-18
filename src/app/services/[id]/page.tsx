@@ -19,6 +19,10 @@ import {
 } from "@/components/ui/breadcrumb";
 import { demoTechnicians, getRelatedServices, getServiceById, serviceCategorySlug, services } from "@/data/services";
 
+// Render the whole route statically. Unknown IDs are generated on demand before the response starts,
+// so notFound() can still send an HTTP 404 instead of a streamed 200.
+export const ensureStatic = "navigation";
+
 export function generateStaticParams() {
   return services.map((service) => ({ id: service.id }));
 }

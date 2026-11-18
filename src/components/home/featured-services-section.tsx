@@ -23,7 +23,7 @@ export function FeaturedServicesSection() {
         <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {featuredServices.map((service) => <ServiceCard key={service.id} service={service} />)}
         </div>
-        <p className="mt-6 text-center text-xs text-muted-foreground">Demonstration listings, providers, ratings and starting prices are illustrative examples.</p>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Demonstration listings, sample providers and starting prices are illustrative examples.</p>
       </Container>
     </section>
   );
