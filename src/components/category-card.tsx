@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { serviceCategorySlug, type ServiceCategory } from "@/data/services";
+import { serviceCategorySlug, type ServiceCategory } from "@/data/service-categories";
 import { RepairIcon } from "@/components/repair-icon";
 
 type CategoryCardProps = {

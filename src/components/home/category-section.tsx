@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { CategoryCard } from "@/components/category-card";
 import { Container } from "@/components/container";
 import { SectionHeading } from "@/components/section-heading";
-import { serviceCategories } from "@/data/services";
+import { serviceCategories } from "@/data/service-categories";
 
 export function CategorySection() {
   return (

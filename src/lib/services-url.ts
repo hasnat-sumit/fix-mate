@@ -1,4 +1,5 @@
-import type { ServiceSort } from "@/data/services";
+/** Sort options offered on the /services page (the API also supports "newest"). */
+export type ServiceSort = "featured" | "price-asc" | "price-desc";
 
 export const defaultServiceSort: ServiceSort = "featured";
 

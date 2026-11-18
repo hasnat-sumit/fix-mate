@@ -3,18 +3,23 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ArrowUpRight, LogOut } from "lucide-react";
+import { UserIdentity } from "@/components/auth/user-identity";
 import { Button } from "@/components/ui/button";
-import { PlannedLink } from "@/components/planned-link";
-import { isActiveNavLink, plannedAuthLinks, publicNavLinks } from "@/lib/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AuthSession } from "@/lib/auth-client";
+import { authRoutes, isActiveNavLink, publicNavLinks, withReturnPath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type MobileNavigationProps = {
+  session: AuthSession | null;
+  isSessionPending: boolean;
+  onSignOut: () => Promise<void>;
+  isSigningOut: boolean;
   onNavigate: () => void;
 };
 
-export function MobileNavigation({ onNavigate }: MobileNavigationProps) {
+export function MobileNavigation({ session, isSessionPending, onSignOut, isSigningOut, onNavigate }: MobileNavigationProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -48,20 +53,42 @@ export function MobileNavigation({ onNavigate }: MobileNavigationProps) {
           );
         })}
       </nav>
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-        <PlannedLink
-          link={plannedAuthLinks.signIn}
-          onNavigate={onNavigate}
-          className="px-3 text-sm font-semibold text-muted-foreground hover:text-foreground"
-        />
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <Button asChild className="h-11 rounded-full px-5">
-            <Link href="/services" onClick={onNavigate}>
-              Get started <ArrowUpRight aria-hidden="true" className="size-4" />
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-4">
+        {isSessionPending ? (
+          <Skeleton aria-hidden="true" className="h-11 w-full rounded-full" />
+        ) : session ? (
+          <>
+            <UserIdentity name={session.user.name} role={session.user.role} />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isSigningOut}
+              onClick={async () => {
+                await onSignOut();
+                onNavigate();
+              }}
+              className="h-11 shrink-0 rounded-full px-4"
+            >
+              <LogOut aria-hidden="true" className="size-4" />
+              {isSigningOut ? "Signing out…" : "Sign out"}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Link
+              href={withReturnPath(authRoutes.signIn, pathname)}
+              onClick={onNavigate}
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Sign in
             </Link>
-          </Button>
-        </div>
+            <Button asChild className="h-11 rounded-full px-5">
+              <Link href="/services" onClick={onNavigate}>
+                Get started <ArrowUpRight aria-hidden="true" className="size-4" />
+              </Link>
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

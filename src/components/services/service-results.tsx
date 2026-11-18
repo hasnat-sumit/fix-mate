@@ -3,8 +3,9 @@ import { ArrowLeft, ArrowRight, Search, SearchX, SlidersHorizontal } from "lucid
 import { ServiceCard } from "@/components/service-card";
 import { ServicesSearchForm } from "@/components/services/services-search-form";
 import { Button } from "@/components/ui/button";
-import { serviceCategories, serviceCategorySlug, services, type ServiceSort } from "@/data/services";
-import { buildServicesHref, defaultServiceSort } from "@/lib/services-url";
+import { categoryFromSlug, serviceCategories, serviceCategorySlug } from "@/data/service-categories";
+import { getServices, type ServiceList } from "@/lib/services-api";
+import { buildServicesHref, defaultServiceSort, type ServiceSort } from "@/lib/services-url";
 import { cn } from "@/lib/utils";
 
 export type ServicesSearchParams = Record<string, string | string[] | undefined>;
@@ -39,21 +40,23 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
   const requestedSort = firstValue(params.sort);
   const sort: ServiceSort = isServiceSort(requestedSort) ? requestedSort : defaultServiceSort;
   const requestedPage = Number(firstValue(params.page) ?? "1");
-  const isKnownCategory = serviceCategories.some((item) => serviceCategorySlug(item.name) === category);
+  const knownCategory = category ? categoryFromSlug(category) : undefined;
 
-  const matchingServices = services
-    .filter((service) => service.name.toLowerCase().includes(query.toLowerCase()))
-    .filter((service) => !category || serviceCategorySlug(service.category) === category)
-    .sort((first, second) => {
-      if (sort === "price-asc") return first.startingPrice - second.startingPrice;
-      if (sort === "price-desc") return second.startingPrice - first.startingPrice;
-      return Number(second.featured) - Number(first.featured);
-    });
+  // An unrecognised category slug matches nothing, so the API isn't asked about it.
+  const result: ServiceList =
+    category && !knownCategory
+      ? { items: [], page: 1, limit: pageSize, total: 0, pageCount: 1 }
+      : await getServices({
+          q: query.slice(0, 100) || undefined,
+          category: knownCategory?.name,
+          sort,
+          // The API clamps out-of-range pages to the last page.
+          page: Number.isInteger(requestedPage) && requestedPage > 1 ? Math.min(requestedPage, 1000) : 1,
+          limit: pageSize,
+        });
 
-  const pageCount = Math.max(1, Math.ceil(matchingServices.length / pageSize));
-  const page = Number.isInteger(requestedPage) ? Math.min(Math.max(requestedPage, 1), pageCount) : 1;
+  const { items: pageServices, page, pageCount, total } = result;
   const startIndex = (page - 1) * pageSize;
-  const pageServices = matchingServices.slice(startIndex, startIndex + pageSize);
   const hasActiveFilters = Boolean(query || category || sort !== defaultServiceSort);
 
   function pageHref(pageNumber: number) {
@@ -90,7 +93,7 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
               {serviceCategories.map((item) => (
                 <option key={item.name} value={serviceCategorySlug(item.name)}>{item.name}</option>
               ))}
-              {category && !isKnownCategory ? <option value={category}>Unrecognized category</option> : null}
+              {category && !knownCategory ? <option value={category}>Unrecognized category</option> : null}
             </select>
           </div>
           <div>
@@ -111,9 +114,9 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
         <div>
           <h2 id="service-results-heading" className="font-heading text-2xl font-bold tracking-[-0.04em] text-foreground sm:text-3xl">Available services</h2>
           <p aria-live="polite" className="mt-2 text-sm tabular-nums text-muted-foreground">
-            {matchingServices.length === 0
-              ? "No matching services in this preview."
-              : `Showing ${startIndex + 1}–${Math.min(startIndex + pageSize, matchingServices.length)} of ${matchingServices.length} example services`}
+            {total === 0
+              ? "No matching services."
+              : `Showing ${startIndex + 1}–${startIndex + pageServices.length} of ${total} ${total === 1 ? "service" : "services"}`}
           </p>
         </div>
         {hasActiveFilters ? (
@@ -133,7 +136,7 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
           <h3 className="mt-4 font-heading text-xl font-bold text-foreground">No services found</h3>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
             {category && !query
-              ? "There are no example listings in this category yet. Try another category or clear your filters."
+              ? "There are no listings in this category yet. Try another category or clear your filters."
               : "Try a different service name or category, or clear your filters to see all listings."}
           </p>
           <Button asChild variant="outline" className="mt-5 h-11 rounded-lg px-5">

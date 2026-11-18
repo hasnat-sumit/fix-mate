@@ -8,7 +8,7 @@ import { ServiceResultsSkeleton } from "@/components/services/service-results-sk
 
 export const metadata: Metadata = {
   title: "Services — FixMate",
-  description: "Browse device and home appliance repair services, compare example starting prices, and find the right help.",
+  description: "Browse device and home appliance repair services from FixMate technicians, compare starting prices, and find the right help.",
 };
 
 export default function ServicesPage({ searchParams }: PageProps<"/services">) {
@@ -23,7 +23,7 @@ export default function ServicesPage({ searchParams }: PageProps<"/services">) {
               Explore Our Services
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-              Browse example repair services for the devices and appliances you rely on. Compare the service details and sample starting prices before choosing what fits.
+              Browse repair services offered by FixMate technicians for the devices and appliances you rely on. Compare service details and starting prices before choosing what fits.
             </p>
           </Container>
         </section>

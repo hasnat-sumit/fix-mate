@@ -3,18 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, Menu, X } from "lucide-react";
+import { ArrowUpRight, LogOut, Menu, X } from "lucide-react";
+import { UserIdentity } from "@/components/auth/user-identity";
+import { useSignOut } from "@/components/auth/use-sign-out";
 import { Container } from "@/components/container";
 import { FixMateLogo } from "@/components/fixmate-logo";
 import { MobileNavigation } from "@/components/mobile-navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { PlannedLink } from "@/components/planned-link";
-import { isActiveNavLink, plannedAuthLinks, publicNavLinks } from "@/lib/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth-client";
+import { authRoutes, isActiveNavLink, publicNavLinks, withReturnPath } from "@/lib/navigation";
 
 export function PublicNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session, isPending } = authClient.useSession();
+  const { signOut, isSigningOut } = useSignOut();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-xl">
@@ -40,15 +45,38 @@ export function PublicNavbar() {
 
         <div className="hidden items-center gap-2 md:flex lg:gap-3">
           <ThemeToggle />
-          <PlannedLink
-            link={plannedAuthLinks.signIn}
-            className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          />
-          <Button asChild className="h-11 rounded-full px-4 lg:px-5">
-            <Link href="/services">
-              Get started <ArrowUpRight aria-hidden="true" className="size-4" />
-            </Link>
-          </Button>
+          {isPending ? (
+            // Same footprint as the signed-out actions, so the header doesn't shift when the session loads.
+            <Skeleton aria-hidden="true" className="h-11 w-48 rounded-full" />
+          ) : session ? (
+            <>
+              <UserIdentity name={session.user.name} role={session.user.role} compact />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={signOut}
+                disabled={isSigningOut}
+                className="h-11 rounded-full px-4"
+              >
+                <LogOut aria-hidden="true" className="size-4" />
+                {isSigningOut ? "Signing out…" : "Sign out"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                href={withReturnPath(authRoutes.signIn, pathname)}
+                className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                Sign in
+              </Link>
+              <Button asChild className="h-11 rounded-full px-4 lg:px-5">
+                <Link href="/services">
+                  Get started <ArrowUpRight aria-hidden="true" className="size-4" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
@@ -66,7 +94,15 @@ export function PublicNavbar() {
             {isMenuOpen ? <X aria-hidden="true" className="size-[18px]" /> : <Menu aria-hidden="true" className="size-[18px]" />}
           </Button>
         </div>
-        {isMenuOpen ? <MobileNavigation onNavigate={() => setIsMenuOpen(false)} /> : null}
+        {isMenuOpen ? (
+          <MobileNavigation
+            session={session}
+            isSessionPending={isPending}
+            onSignOut={signOut}
+            isSigningOut={isSigningOut}
+            onNavigate={() => setIsMenuOpen(false)}
+          />
+        ) : null}
       </Container>
     </header>
   );
