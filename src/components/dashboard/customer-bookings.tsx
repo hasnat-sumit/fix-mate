@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CreditCard, X } from "lucide-react";
+import { CreditCard, Route, X } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { DataState, PageHeader, Pager, selectClassName, StatusBadge } from "@/components/dashboard/dashboard-ui";
+import { JobTimeline } from "@/components/dashboard/job-timeline";
 import { useApiQuery } from "@/components/dashboard/use-api-query";
 import { ServiceImage } from "@/components/service-image";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import { bookingStatuses, type Booking, type BookingStatus, type Paged } from "@/lib/dashboard-types";
 import { formatCalendarDate, formatPrice, formatStatus } from "@/lib/format";
@@ -26,6 +28,7 @@ export function CustomerBookings() {
   const [toCancel, setToCancel] = useState<Booking | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [tracking, setTracking] = useState<Booking | null>(null);
 
   async function confirmCancel() {
     if (!toCancel) return;
@@ -91,27 +94,37 @@ export function CustomerBookings() {
     {
       header: "Actions",
       hideLabelOnMobile: true,
-      cell: (booking) => {
-        if (booking.status === "requested") {
-          return (
-            <Button type="button" variant="outline" onClick={() => setToCancel(booking)} className="h-9 w-full rounded-lg px-3 text-error md:w-auto">
-              <X aria-hidden="true" className="size-4" /> Cancel
-            </Button>
-          );
-        }
-        if (booking.status === "completed" && booking.paymentStatus === "unpaid") {
-          const isPaying = payingId === booking._id;
-          return (
-            <Button type="button" onClick={() => payNow(booking)} disabled={payingId !== null} aria-busy={isPaying} className="h-9 w-full rounded-lg px-3 md:w-auto">
-              <CreditCard aria-hidden="true" className="size-4" /> {isPaying ? "Opening…" : `Pay Now ${formatPrice(booking.finalAmount)}`}
-            </Button>
-          );
-        }
-        if (booking.paymentStatus === "paid") return <StatusBadge status="paid" label="Paid" />;
-        return <span className="text-xs text-muted-foreground">—</span>;
-      },
+      cell: (booking) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="ghost" onClick={() => setTracking(booking)} className="h-9 rounded-lg px-3" aria-label={`Track ${booking.serviceTitle}`}>
+            <Route aria-hidden="true" className="size-4" /> Track
+          </Button>
+          {primaryAction(booking)}
+        </div>
+      ),
     },
   ];
+
+  /** Cancel while requested, Pay Now when completed and unpaid, or the Paid badge. */
+  function primaryAction(booking: Booking) {
+    if (booking.status === "requested") {
+      return (
+        <Button type="button" variant="outline" onClick={() => setToCancel(booking)} className="h-9 w-full rounded-lg px-3 text-error md:w-auto">
+          <X aria-hidden="true" className="size-4" /> Cancel
+        </Button>
+      );
+    }
+    if (booking.status === "completed" && booking.paymentStatus === "unpaid") {
+      const isPaying = payingId === booking._id;
+      return (
+        <Button type="button" onClick={() => payNow(booking)} disabled={payingId !== null} aria-busy={isPaying} className="h-9 w-full rounded-lg px-3 md:w-auto">
+          <CreditCard aria-hidden="true" className="size-4" /> {isPaying ? "Opening…" : `Pay Now ${formatPrice(booking.finalAmount)}`}
+        </Button>
+      );
+    }
+    if (booking.paymentStatus === "paid") return <StatusBadge status="paid" label="Paid" />;
+    return null;
+  }
 
   return (
     <>
@@ -163,6 +176,15 @@ export function CustomerBookings() {
         {data ? <DataTable caption="My bookings" rows={data.items} columns={columns} rowKey={(booking) => booking._id} /> : null}
         {data ? <Pager page={data.page} pageCount={data.pageCount} onChange={setPage} /> : null}
       </DataState>
+
+      <Dialog
+        open={tracking !== null}
+        onOpenChange={(open) => !open && setTracking(null)}
+        title="Job timeline"
+        description={tracking ? `${tracking.serviceTitle} · ${tracking.technicianName}` : undefined}
+      >
+        {tracking ? <JobTimeline booking={tracking} /> : null}
+      </Dialog>
 
       <ConfirmDialog
         open={toCancel !== null}
