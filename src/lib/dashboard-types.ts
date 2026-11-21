@@ -101,9 +101,10 @@ export type AdminUser = {
 };
 
 export type Profile = {
-  id: string;
+  _id: string;
   name: string;
   email: string;
+  image: string | null;
   role: UserRole;
   phone: string;
   area: string;

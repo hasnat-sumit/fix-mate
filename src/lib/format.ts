@@ -15,6 +15,11 @@ export function formatCalendarDate(value: string) {
   return dateFormat.format(new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1));
 }
 
+/** A timestamp's date in the viewer's local time: "Nov 23, 2026". */
+export function formatDate(value: string) {
+  return dateFormat.format(new Date(value));
+}
+
 /** A timestamp in the viewer's local time: "Nov 23, 2026, 4:05 PM". */
 export function formatDateTime(value: string) {
   return dateTimeFormat.format(new Date(value));
