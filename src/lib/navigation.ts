@@ -1,3 +1,5 @@
+import { BadgeCheck, CirclePlus, ClipboardList, CreditCard, LayoutDashboard, Receipt, UserRoundPen, Users, Wrench, type LucideIcon } from "lucide-react";
+
 export const publicNavLinks = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
@@ -37,32 +39,45 @@ export function withReturnPath(route: string, pathname: string) {
   return `${route}${separator}next=${encodeURIComponent(pathname)}`;
 }
 
-export type DashboardLink = { label: string; href: string };
+export type DashboardLink = { label: string; href: string; icon: LucideIcon };
 
 /** The customer’s booking list (linked after a repair request). */
-export const myBookingsHref = "/dashboard/bookings";
+export const myBookingsHref = "/dashboard/customer/bookings";
 
-/** Where each role lands after signing in, and the target of "Dashboard" links. */
+/** Each role’s dashboard overview: where they land after signing in, and the target of "Dashboard" links. */
 export function dashboardHome(role: keyof typeof roleLabels) {
-  return dashboardLinks[role][0].href;
+  return `/dashboard/${role}`;
 }
 
-/** Dashboard sections per role. The first entry is each role's dashboard home. */
+const profileLink = { label: "Update Profile", href: "/dashboard/profile", icon: UserRoundPen };
+
+/** Sidebar menu per role. The first entry is the role’s overview page. */
 export const dashboardLinks = {
   customer: [
-    { label: "My requests", href: "/dashboard/bookings" },
-    { label: "Profile", href: "/dashboard/profile" },
+    { label: "Overview", href: "/dashboard/customer", icon: LayoutDashboard },
+    { label: "My Bookings", href: "/dashboard/customer/bookings", icon: ClipboardList },
+    { label: "Payment History", href: "/dashboard/customer/payments", icon: CreditCard },
+    profileLink,
   ],
   technician: [
-    { label: "Jobs", href: "/dashboard/jobs" },
-    { label: "My services", href: "/dashboard/services" },
-    { label: "Profile", href: "/dashboard/profile" },
+    { label: "Overview", href: "/dashboard/technician", icon: LayoutDashboard },
+    { label: "Add Service", href: "/dashboard/technician/add-service", icon: CirclePlus },
+    { label: "My Services", href: "/dashboard/technician/my-services", icon: Wrench },
+    { label: "Manage Requests", href: "/dashboard/technician/requests", icon: ClipboardList },
+    profileLink,
   ],
   admin: [
-    { label: "Overview", href: "/dashboard/admin" },
-    { label: "Service approvals", href: "/dashboard/admin/services" },
-    { label: "Users", href: "/dashboard/admin/users" },
-    { label: "Bookings", href: "/dashboard/admin/bookings" },
-    { label: "Profile", href: "/dashboard/profile" },
+    { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
+    { label: "Manage Users", href: "/dashboard/admin/users", icon: Users },
+    { label: "Service Approval", href: "/dashboard/admin/services", icon: BadgeCheck },
+    { label: "All Bookings", href: "/dashboard/admin/bookings", icon: ClipboardList },
+    { label: "Transactions", href: "/dashboard/admin/transactions", icon: Receipt },
+    profileLink,
   ],
 } as const satisfies Record<keyof typeof roleLabels, DashboardLink[]>;
+
+/** The role whose dashboard area a path belongs to (null for shared pages such as /dashboard/profile). */
+export function dashboardAreaRole(pathname: string): keyof typeof roleLabels | null {
+  const segment = pathname.split("/")[2];
+  return segment === "customer" || segment === "technician" || segment === "admin" ? segment : null;
+}

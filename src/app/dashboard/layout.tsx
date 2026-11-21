@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { PublicNavbar } from "@/components/public-navbar";
 
 export const metadata: Metadata = {
   title: "Dashboard — FixMate",
@@ -8,13 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Dashboard layout: sidebar + top bar, separate from the public navbar and footer. */
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
-  return (
-    <>
-      <PublicNavbar />
-      <main id="main-content">
-        <DashboardShell>{children}</DashboardShell>
-      </main>
-    </>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }
