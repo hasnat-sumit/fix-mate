@@ -34,7 +34,7 @@ export function HeroSection() {
               <span className="sr-only">Search for a repair service</span>
               <input
                 type="search"
-                name="q"
+                name="search"
                 placeholder="What needs fixing?"
                 className="w-full min-w-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/80"
               />

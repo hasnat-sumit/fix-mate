@@ -25,8 +25,9 @@ export function ServicesSearchForm({ children, ...props }: ServicesSearchFormPro
     // Changing the search or filters always starts again from page 1.
     router.push(
       buildServicesHref({
-        q: readField(formData, "q"),
+        search: readField(formData, "search"),
         category: readField(formData, "category"),
+        serviceMode: readField(formData, "serviceMode"),
         sort: readField(formData, "sort"),
       }),
     );

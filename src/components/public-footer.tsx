@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight, BriefcaseBusiness, Camera, MessageCircle } from "lucide-react";
 import { Container } from "@/components/container";
 import { FixMateLogo } from "@/components/fixmate-logo";
+import { categoryHref } from "@/data/service-categories";
 
 const footerLinks = {
   Explore: [
@@ -10,11 +11,10 @@ const footerLinks = {
     { label: "About", href: "/about" },
     { label: "How it works", href: "/#how-it-works" },
   ],
-  Services: [
-    { label: "Phones & computers", href: "/services?category=smartphone" },
-    { label: "Home appliances", href: "/services?category=home-appliances" },
-    { label: "Home services", href: "/services?category=electrical-services" },
-  ],
+  "Popular categories": (["Smartphone", "Laptop & PC", "AC", "Refrigerator", "Electrical"] as const).map((name) => ({
+    label: name,
+    href: categoryHref(name),
+  })),
 };
 
 const socialPlaceholders = [
