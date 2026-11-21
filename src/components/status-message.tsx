@@ -4,6 +4,8 @@ import { Container } from "@/components/container";
 
 type StatusMessageProps = {
   icon: LucideIcon;
+  /** Replaces the small icon with a larger illustration (e.g. the 404 artwork). */
+  illustration?: ReactNode;
   eyebrow: string;
   title: string;
   description: string;
@@ -12,10 +14,11 @@ type StatusMessageProps = {
 };
 
 /** Centered full-section message for not-found and error states. */
-export function StatusMessage({ icon: Icon, eyebrow, title, description, actions, tone = "neutral" }: StatusMessageProps) {
+export function StatusMessage({ icon: Icon, illustration, eyebrow, title, description, actions, tone = "neutral" }: StatusMessageProps) {
   return (
     <section className="py-20 sm:py-28 lg:py-32">
       <Container className="flex flex-col items-center text-center">
+        {illustration ?? (
         <span
           className={
             tone === "error"
@@ -25,6 +28,7 @@ export function StatusMessage({ icon: Icon, eyebrow, title, description, actions
         >
           <Icon aria-hidden="true" className="size-7" strokeWidth={1.7} />
         </span>
+        )}
         <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
         <h1 className="mt-3 max-w-2xl font-heading text-balance text-3xl font-extrabold tracking-[-0.05em] text-foreground sm:text-5xl">
           {title}
