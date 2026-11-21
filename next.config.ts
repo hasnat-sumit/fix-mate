@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
       { source: "/register", destination: "/sign-up", permanent: true },
     ];
   },
+  // Profile photos and service images uploaded through ImgBB.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "i.ibb.co" }],
+  },
   experimental: {
     agentFeedback: true,
   },
