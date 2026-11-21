@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BookingList } from "@/components/dashboard/booking-list";
+import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
 
 export const metadata: Metadata = { title: "Manage Requests — FixMate" };
 
@@ -7,13 +7,5 @@ export const metadata: Metadata = { title: "Manage Requests — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return (
-    <BookingList
-      endpoint="/api/bookings/technician"
-      viewer="technician"
-      title="Manage Requests"
-      description="Requests for your services. Accept or decline new requests, then update each job as you work on it."
-      emptyDescription="Requests for your approved services will appear here."
-    />
-  );
+  return <UpcomingSection title="Manage Requests" description="Requests for your services. Accept or reject new requests, then move each job forward." />;
 }

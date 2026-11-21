@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { CustomerPayments } from "@/components/dashboard/customer-payments";
 
 export const metadata: Metadata = { title: "Payment History — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "Payment History — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="Payment History" description="Payments you have made for completed jobs." />;
+  return <CustomerPayments />;
 }
