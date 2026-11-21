@@ -197,17 +197,62 @@ export function BarChart({ title, description, data, formatValue = String }: { t
   );
 }
 
-export const selectClassName =
-  "h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
+/**
+ * Vertical columns for change over time (e.g. revenue per month): same single validated hue and mark specs
+ * as BarChart, columns <= 24px wide with a 4px rounded cap, the value on each cap, a hover tooltip and a
+ * screen-reader table.
+ */
+export function ColumnChart({ title, description, data, formatValue = String }: { title: string; description?: string; data: BarDatum[]; formatValue?: (value: number) => string }) {
+  const max = Math.max(1, ...data.map((datum) => datum.value));
+  const titleId = useId();
 
-/** Temporary content for dashboard sections that are still being built. */
-export function UpcomingSection({ title, description }: { title: string; description: string }) {
   return (
-    <>
-      <PageHeader title={title} description={description} />
-      <div className="mt-6 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
-        This section is coming soon.
+    <figure aria-labelledby={titleId} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <figcaption>
+        <p id={titleId} className="font-heading text-base font-bold text-foreground">{title}</p>
+        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+      </figcaption>
+      <div aria-hidden="true" className="mt-6 flex h-52 items-stretch gap-2 border-b border-border">
+        {data.map((datum) => (
+          <div key={datum.label} className="group/col relative flex flex-1 flex-col items-center justify-end">
+            <span className="mb-1.5 text-xs font-semibold tabular-nums text-foreground">{formatValue(datum.value)}</span>
+            <div
+              className="w-full max-w-6 rounded-t-[4px] bg-chart-bar transition-[filter] group-hover/col:brightness-110"
+              style={{ height: datum.value > 0 ? `max(calc((100% - 28px) * ${datum.value / max}), 4px)` : 0 }}
+            />
+            <span className="pointer-events-none absolute bottom-full z-10 mb-1 hidden whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1.5 text-xs shadow-md group-hover/col:block">
+              <strong className="font-semibold tabular-nums text-foreground">{formatValue(datum.value)}</strong> <span className="text-muted-foreground">{datum.label}</span>
+            </span>
+          </div>
+        ))}
       </div>
-    </>
+      <div aria-hidden="true" className="mt-2 flex gap-2">
+        {data.map((datum) => (
+          <span key={datum.label} className="flex-1 truncate text-center text-xs text-muted-foreground">
+            {datum.label}
+          </span>
+        ))}
+      </div>
+      <table className="sr-only">
+        <caption>{title}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Period</th>
+            <th scope="col">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((datum) => (
+            <tr key={datum.label}>
+              <th scope="row">{datum.label}</th>
+              <td>{formatValue(datum.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
   );
 }
+
+export const selectClassName =
+  "h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";

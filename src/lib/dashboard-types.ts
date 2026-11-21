@@ -76,33 +76,11 @@ export type TechnicianStats = {
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 
-/** A service as its technician (or an admin) sees it, including moderation state. */
-export type OwnerService = {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  details: string;
-  price: number;
-  image: string;
-  includes: string[];
-  availability: string;
-  approvalStatus: ApprovalStatus;
-  rejectionReason: string | null;
-  isActive: boolean;
-  isFeatured: boolean;
-  ratingAverage: number;
-  reviewCount: number;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type AdminService = OwnerService & { technician: { id: string | null; name: string; email: string } };
-
 export type AdminUser = {
-  id: string;
+  _id: string;
   name: string;
   email: string;
+  image?: string | null;
   role: UserRole;
   status: "active" | "suspended";
   createdAt: string;
@@ -121,8 +99,17 @@ export type Profile = {
 };
 
 export type AdminStats = {
-  users: Record<UserRole, number> & { suspended: number };
-  services: Record<ApprovalStatus, number>;
-  bookings: Record<string, number>;
-  revenue: { amount: number; payments: number };
+  totalUsers: number;
+  totalTechnicians: number;
+  pendingServices: number;
+  totalRevenue: number;
+  totalPayments: number;
+  usersByRole: Record<UserRole, number>;
+  servicesByStatus: Record<ApprovalStatus, number>;
+  bookingsByStatus: Record<BookingStatus, number>;
+  /** The last 6 months, oldest first; month is "YYYY-MM". */
+  revenueByMonth: { month: string; revenue: number }[];
 };
+
+/** GET /api/admin/payments adds the total across every payment. */
+export type PaymentsWithRevenue = Paged<Payment> & { totalRevenue: number };
