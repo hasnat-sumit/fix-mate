@@ -10,11 +10,11 @@ import { Container } from "@/components/container";
 import { SectionHeading } from "@/components/section-heading";
 
 const trustFeatures: { title: string; description: string; icon: LucideIcon }[] = [
-  { title: "Clear service details", description: "Compare what each repair includes before making a request.", icon: BadgeCheck },
-  { title: "Upfront starting prices", description: "Listings show example starting prices to help you compare.", icon: CircleDollarSign },
-  { title: "Pay after service", description: "The FixMate experience is designed around completed repairs.", icon: ShieldCheck },
-  { title: "Provider information", description: "Review service provider details before requesting help.", icon: MessageSquareQuote },
-  { title: "Repair progress", description: "The service experience is designed to keep customers informed.", icon: Waypoints },
+  { title: "Verified technicians", description: "Every service is reviewed and approved by an admin before customers can book it.", icon: BadgeCheck },
+  { title: "Upfront starting prices", description: "Each listing shows its starting price; the technician confirms the final amount when the job is done.", icon: CircleDollarSign },
+  { title: "Pay after service", description: "The Pay Now button appears only after the job is completed. Nothing is charged upfront.", icon: ShieldCheck },
+  { title: "Know your technician", description: "See the technician’s name, photo, service area and experience before you request.", icon: MessageSquareQuote },
+  { title: "Track every step", description: "Requested → Accepted → In Progress → Completed → Paid, all visible in your dashboard.", icon: Waypoints },
 ];
 
 export function TrustSection() {
