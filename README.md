@@ -6,8 +6,8 @@ FixMate is a full-stack, role-based platform for booking device and home-applian
 
 | | |
 | --- | --- |
-| **Live site** | `https://<your-client>.vercel.app` _(add after deploying)_ |
-| **API** | `https://<your-server>.onrender.com` _(add after deploying)_ |
+| **Live site** | https://fix-mate-peach.vercel.app |
+| **API** | https://fix-mate-server-nine.vercel.app (health check: [/api/health](https://fix-mate-server-nine.vercel.app/api/health)) |
 | **Client repo** | https://github.com/hasnat-sumit/fix-mate |
 | **Server repo** | https://github.com/hasnat-sumit/fix-mate-server |
 
@@ -90,5 +90,5 @@ npm run dev                  # http://localhost:3000
 ## Deployment (Vercel)
 
 1. Import the repository in Vercel (framework: Next.js).
-2. Set `API_URL` to the deployed API origin, e.g. `https://<your-server>.onrender.com`. Deploy the API first; the build fetches services from it.
-3. Add the Vercel domain to the server's `CLIENT_ORIGINS` and set the server's `BETTER_AUTH_URL` to it (see the server README).
+2. Set `API_URL` to the deployed API origin (here `https://fix-mate-server-nine.vercel.app`). Deploy the API first; the build fetches services from it.
+3. Set the server's `BETTER_AUTH_URL` and `CLIENT_ORIGINS` to this site's domain (here `https://fix-mate-peach.vercel.app`); see the server README.
