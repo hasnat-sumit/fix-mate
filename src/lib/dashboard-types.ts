@@ -66,6 +66,14 @@ export type CustomerStats = {
   byStatus: Record<BookingStatus, number>;
 };
 
+export type TechnicianStats = {
+  totalServices: number;
+  approvedServices: number;
+  pendingRequests: number;
+  totalEarned: number;
+  byStatus: Record<BookingStatus, number>;
+};
+
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 /** A service as its technician (or an admin) sees it, including moderation state. */

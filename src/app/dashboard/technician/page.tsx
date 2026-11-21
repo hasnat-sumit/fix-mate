@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { TechnicianOverview } from "@/components/dashboard/technician-overview";
 
 export const metadata: Metadata = { title: "Overview — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "Overview — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="Overview" description="Your services and incoming requests at a glance." />;
+  return <TechnicianOverview />;
 }

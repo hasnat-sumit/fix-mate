@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { TechnicianRequests } from "@/components/dashboard/technician-requests";
 
 export const metadata: Metadata = { title: "Manage Requests — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "Manage Requests — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="Manage Requests" description="Requests for your services. Accept or reject new requests, then move each job forward." />;
+  return <TechnicianRequests />;
 }
