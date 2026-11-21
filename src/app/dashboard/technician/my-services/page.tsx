@@ -7,7 +7,5 @@ export const metadata: Metadata = { title: "My Services — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return (
-    <TechnicianServices />
-  );
+  return <TechnicianServices />;
 }

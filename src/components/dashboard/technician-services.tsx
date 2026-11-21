@@ -2,169 +2,196 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { FormAlert } from "@/components/auth/auth-form-parts";
+import { CirclePlus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { DataTable, type Column } from "@/components/dashboard/data-table";
 import { DataState, PageHeader, StatusBadge } from "@/components/dashboard/dashboard-ui";
 import { ServiceForm } from "@/components/dashboard/service-form";
 import { useApiQuery } from "@/components/dashboard/use-api-query";
 import { ServiceImage } from "@/components/service-image";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Dialog } from "@/components/ui/dialog";
 import { ApiError, apiRequest, refreshServiceCatalogCache } from "@/lib/api-client";
-import type { OwnerService } from "@/lib/dashboard-types";
 import { formatPrice } from "@/lib/format";
+import type { Service } from "@/lib/services-api";
+import { cn } from "@/lib/utils";
 
-/** The technician's services: add, edit, hide or show, and delete. */
+const errorMessage = (error: unknown) => (error instanceof ApiError ? error.message : "Something went wrong. Please try again.");
+
+/** My Services: full CRUD for the technician's own services, plus the availability switch. */
 export function TechnicianServices() {
-  const { data, error, isLoading, reload } = useApiQuery<OwnerService[]>("/api/services/mine");
-  // "new" for the add form, a service ID for editing, or null.
-  const [editing, setEditing] = useState<string | null>(null);
+  const { data, error, isLoading, reload } = useApiQuery<Service[]>("/api/services/my");
+  const [editing, setEditing] = useState<Service | null>(null);
+  const [isEditBusy, setIsEditBusy] = useState(false);
+  const [toDelete, setToDelete] = useState<Service | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  async function afterChange() {
-    setEditing(null);
-    reload();
-    await refreshServiceCatalogCache();
+  async function toggleAvailability(service: Service) {
+    setTogglingId(service._id);
+    try {
+      await apiRequest(`/api/services/${service._id}`, { method: "PATCH", body: { isAvailable: !service.isAvailable } });
+      toast.success(service.isAvailable ? "Service hidden from public pages." : "Service is available again.");
+      await refreshServiceCatalogCache();
+      reload();
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    } finally {
+      setTogglingId(null);
+    }
   }
 
-  const editingService = data?.find((service) => service.id === editing);
+  async function confirmDelete() {
+    if (!toDelete) return;
+    setIsDeleting(true);
+    try {
+      await apiRequest(`/api/services/${toDelete._id}`, { method: "DELETE" });
+      toast.success(`“${toDelete.title}” deleted.`);
+      setToDelete(null);
+      await refreshServiceCatalogCache();
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    } finally {
+      setIsDeleting(false);
+      reload();
+    }
+  }
+
+  const columns: Column<Service>[] = [
+    {
+      header: "Service",
+      className: "min-w-[240px]",
+      cell: (service) => (
+        <div className="flex items-center gap-3">
+          <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+            <ServiceImage src={service.image} alt="" sizes="64px" />
+          </div>
+          <div className="min-w-0">
+            <p className="line-clamp-2 font-semibold text-foreground">{service.title}</p>
+            <p className="text-xs text-muted-foreground">{service.serviceMode}</p>
+          </div>
+        </div>
+      ),
+    },
+    { header: "Category", cell: (service) => service.category },
+    { header: "Price", cell: (service) => <span className="tabular-nums">{formatPrice(service.basePrice)}</span> },
+    { header: "Approval", cell: (service) => <StatusBadge status={service.approvalStatus} /> },
+    {
+      header: "Available",
+      cell: (service) => (
+        <AvailabilitySwitch
+          checked={service.isAvailable}
+          disabled={togglingId === service._id}
+          label={`${service.title} available on public pages`}
+          onChange={() => toggleAvailability(service)}
+        />
+      ),
+    },
+    {
+      header: "Actions",
+      hideLabelOnMobile: true,
+      cell: (service) => (
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={() => setEditing(service)} className="h-9 flex-1 rounded-lg px-3 md:flex-none" aria-label={`Edit ${service.title}`}>
+            <Pencil aria-hidden="true" className="size-4" /> Edit
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setToDelete(service)} className="h-9 flex-1 rounded-lg px-3 text-error md:flex-none" aria-label={`Delete ${service.title}`}>
+            <Trash2 aria-hidden="true" className="size-4" /> Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
       <PageHeader
-        title="My services"
-        description="Services you offer on FixMate. New and edited services are reviewed by an admin before they appear publicly."
+        title="My Services"
+        description="Edit, hide or delete your services. Editing sends a service back for admin approval; switching availability off hides it from the public pages."
         actions={
-          editing === null ? (
-            <Button type="button" onClick={() => setEditing("new")} className="h-11 rounded-lg px-4">
-              <Plus aria-hidden="true" className="size-4" /> Add a service
-            </Button>
-          ) : null
+          <Button asChild className="h-11 rounded-full px-5">
+            <Link href="/dashboard/technician/add-service">
+              <CirclePlus aria-hidden="true" className="size-4" /> Add Service
+            </Link>
+          </Button>
         }
       />
-      {editing === "new" ? (
-        <div className="mt-6">
-          <ServiceForm onSaved={afterChange} onCancel={() => setEditing(null)} />
-        </div>
-      ) : null}
       <DataState
         isLoading={isLoading}
         error={error}
         isEmpty={!data || data.length === 0}
         emptyTitle="No services yet"
-        emptyDescription="Add your first service. Customers can request it once an admin approves it."
+        emptyDescription="Add your first repair service. Customers can find it once an admin approves it."
+        emptyAction={
+          <Button asChild className="h-11 rounded-full px-5">
+            <Link href="/dashboard/technician/add-service">Add a service</Link>
+          </Button>
+        }
         onRetry={reload}
       >
-        <ul className="mt-6 space-y-4">
-          {data?.map((service) =>
-            service.id === editing && editingService ? (
-              <li key={service.id}>
-                <ServiceForm service={editingService} onSaved={afterChange} onCancel={() => setEditing(null)} />
-              </li>
-            ) : (
-              <li key={service.id}>
-                <ServiceRow service={service} isLocked={editing !== null} onEdit={() => setEditing(service.id)} onChanged={afterChange} />
-              </li>
-            ),
-          )}
-        </ul>
+        {data ? <DataTable caption="My services" rows={data} columns={columns} rowKey={(service) => service._id} /> : null}
       </DataState>
+
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        title="Edit service"
+        description={editing?.title}
+        isBusy={isEditBusy}
+      >
+        {editing ? (
+          <ServiceForm
+            key={editing._id}
+            service={editing}
+            onBusyChange={setIsEditBusy}
+            onCancel={() => setEditing(null)}
+            onSaved={(saved) => {
+              toast.success("Changes saved.", {
+                description: saved.approvalStatus === "pending" ? "The service is Pending again until an admin approves it." : undefined,
+              });
+              setIsEditBusy(false);
+              setEditing(null);
+              reload();
+            }}
+          />
+        ) : null}
+      </Dialog>
+
+      <ConfirmDialog
+        open={toDelete !== null}
+        onOpenChange={(open) => !open && setToDelete(null)}
+        title="Delete this service?"
+        description={
+          <>
+            <strong className="text-foreground">{toDelete?.title}</strong> will be removed permanently. Past bookings keep their own copy of
+            the details. A service with open requests can’t be deleted until they’re finished or rejected.
+          </>
+        }
+        confirmLabel="Delete service"
+        destructive
+        isBusy={isDeleting}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }
 
-type ServiceRowProps = { service: OwnerService; isLocked: boolean; onEdit: () => void; onChanged: () => Promise<void> };
-
-function ServiceRow({ service, isLocked, onEdit, onChanged }: ServiceRowProps) {
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isPublic = service.approvalStatus === "approved" && service.isActive;
-
-  async function run(request: () => Promise<unknown>) {
-    setIsBusy(true);
-    setError(null);
-    try {
-      await request();
-      await onChanged();
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Something went wrong. Please try again.");
-    } finally {
-      setIsBusy(false);
-      setConfirmDelete(false);
-    }
-  }
-
+function AvailabilitySwitch({ checked, disabled, label, onChange }: { checked: boolean; disabled: boolean; label: string; onChange: () => void }) {
   return (
-    <article aria-label={service.title} className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:p-5">
-      <div className="relative h-36 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-28 sm:w-40">
-        <ServiceImage src={service.image} alt="" sizes="160px" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">{service.category}</p>
-            <h2 className="mt-1 font-heading text-lg font-bold tracking-[-0.03em] text-foreground">{service.title}</h2>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <StatusBadge status={service.approvalStatus} label={service.approvalStatus === "pending" ? "Awaiting approval" : undefined} />
-            {!service.isActive ? <StatusBadge status="cancelled" label="Hidden" /> : null}
-            {service.isFeatured ? <StatusBadge status="accepted" label="Featured" /> : null}
-          </div>
-        </div>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{service.description}</p>
-        <p className="mt-2 text-sm text-foreground/85">
-          From <span className="font-semibold tabular-nums">{formatPrice(service.price)}</span>
-          {service.reviewCount > 0 ? ` · ${service.ratingAverage.toFixed(1)} from ${service.reviewCount} ${service.reviewCount === 1 ? "review" : "reviews"}` : ""}
-        </p>
-        {service.approvalStatus === "rejected" && service.rejectionReason ? (
-          <p className="mt-3 rounded-xl border border-error/30 bg-error/10 p-3 text-sm leading-6 text-foreground">
-            <span className="font-semibold">Not approved:</span> {service.rejectionReason} Edit the service to resubmit it.
-          </p>
-        ) : null}
-        {error ? (
-          <div className="mt-3">
-            <FormAlert>{error}</FormAlert>
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {confirmDelete ? (
-            <>
-              <p className="w-full text-sm text-foreground">
-                Delete “{service.title}”? Services with booking history are hidden instead, so past bookings keep their details.
-              </p>
-              <Button type="button" variant="destructive" disabled={isBusy} onClick={() => run(() => apiRequest(`/api/services/${service.id}`, { method: "DELETE" }))} className="h-10 rounded-lg px-4">
-                {isBusy ? "Deleting…" : "Yes, delete"}
-              </Button>
-              <Button type="button" variant="outline" disabled={isBusy} onClick={() => setConfirmDelete(false)} className="h-10 rounded-lg px-4">
-                Keep it
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button type="button" variant="outline" disabled={isLocked || isBusy} onClick={onEdit} className="h-10 rounded-lg px-4">
-                Edit
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isLocked || isBusy}
-                onClick={() => run(() => apiRequest(`/api/services/${service.id}`, { method: "PATCH", body: { isActive: !service.isActive } }))}
-                className="h-10 rounded-lg px-4"
-              >
-                {service.isActive ? "Hide from customers" : "Show to customers"}
-              </Button>
-              <Button type="button" variant="ghost" disabled={isLocked || isBusy} onClick={() => setConfirmDelete(true)} className="h-10 rounded-lg px-4 text-error hover:text-error">
-                Delete
-              </Button>
-              {isPublic ? (
-                <Button asChild variant="link" className="h-10 px-2">
-                  <Link href={`/services/${service.id}`}>View public page</Link>
-                </Button>
-              ) : null}
-            </>
-          )}
-        </div>
-      </div>
-    </article>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onChange}
+      className="inline-flex items-center gap-2 rounded-full text-xs font-semibold text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
+    >
+      <span className={cn("relative h-6 w-11 rounded-full transition-colors", checked ? "bg-success" : "bg-muted-foreground/40")}>
+        <span className={cn("absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform", checked ? "translate-x-5.5" : "translate-x-0.5")} />
+      </span>
+      {checked ? "On" : "Off"}
+    </button>
   );
 }
