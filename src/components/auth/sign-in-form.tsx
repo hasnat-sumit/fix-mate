@@ -3,14 +3,15 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormAlert, SignedInNotice } from "@/components/auth/auth-form-parts";
+import { toast } from "sonner";
+import { FormAlert, RedirectingNotice, useRedirectSignedIn } from "@/components/auth/auth-form-parts";
 import { PasswordInput } from "@/components/auth/password-input";
 import { describedBy, FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { authClient, type UserRole } from "@/lib/auth-client";
 import { describeAuthError, unreachableError } from "@/lib/auth-errors";
-import { authRoutes, safeRedirectPath, withReturnPath } from "@/lib/navigation";
+import { authRoutes, dashboardHome, safeRedirectPath, withReturnPath } from "@/lib/navigation";
 
 type Values = { email: string; password: string };
 type Errors = Partial<Record<keyof Values, string>>;
@@ -28,7 +29,8 @@ function validate(values: Values): Errors {
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = safeRedirectPath(searchParams.get("next"));
+  // The page the visitor was trying to open, if any; otherwise they go to their own dashboard.
+  const nextPath = safeRedirectPath(searchParams.get("next"), null);
   const { data: session } = authClient.useSession();
 
   const [values, setValues] = useState<Values>({ email: "", password: "" });
@@ -36,14 +38,18 @@ export function SignInForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "redirecting">("idle");
 
-  // Keep showing the form while redirecting after a successful sign-in, instead of flashing the notice.
-  if (session && status !== "redirecting") {
-    return <SignedInNotice name={session.user.name} role={session.user.role} continueTo={nextPath} />;
-  }
+  const isRedirectingSignedIn = useRedirectSignedIn(session, nextPath, status !== "idle");
+  if (isRedirectingSignedIn) return <RedirectingNotice />;
 
   function updateField(field: keyof Values, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
     if (errors[field]) setErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
+  function fail(message: string) {
+    setFormError(message);
+    toast.error(message);
+    setStatus("idle");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -59,17 +65,15 @@ export function SignInForm() {
 
     setStatus("submitting");
     try {
-      const { error } = await authClient.signIn.email({ email: values.email.trim(), password: values.password });
-      if (error) {
-        setFormError(describeAuthError(error).message);
-        setStatus("idle");
-        return;
-      }
+      const { data, error } = await authClient.signIn.email({ email: values.email.trim(), password: values.password });
+      if (error) return fail(describeAuthError(error).message);
+
       setStatus("redirecting");
-      router.replace(nextPath);
+      const user = data.user as { name: string; role: UserRole };
+      toast.success(`Welcome back, ${user.name.split(" ")[0]}!`);
+      router.replace(nextPath ?? dashboardHome(user.role));
     } catch {
-      setFormError(unreachableError.message);
-      setStatus("idle");
+      fail(unreachableError.message);
     }
   }
 
@@ -114,10 +118,10 @@ export function SignInForm() {
       <p className="text-center text-sm text-muted-foreground">
         New to FixMate?{" "}
         <Link
-          href={withReturnPath(authRoutes.register, nextPath)}
+          href={nextPath ? withReturnPath(authRoutes.register, nextPath) : authRoutes.register}
           className="font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
-          Create an account
+          Sign up
         </Link>
       </p>
     </form>

@@ -1,12 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
-import Link from "next/link";
-import { AlertCircle, UserRoundCheck } from "lucide-react";
-import { useSignOut } from "@/components/auth/use-sign-out";
-import { Button } from "@/components/ui/button";
-import type { UserRole } from "@/lib/auth-client";
-import { roleLabels } from "@/lib/navigation";
+import { useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
+import type { AuthSession } from "@/lib/auth-client";
+import { dashboardHome } from "@/lib/navigation";
 
 /** Form-level error, announced to screen readers as soon as it appears. */
 export function FormAlert({ children }: { children: ReactNode }) {
@@ -18,32 +16,27 @@ export function FormAlert({ children }: { children: ReactNode }) {
   );
 }
 
-type SignedInNoticeProps = {
-  name: string;
-  role: UserRole;
-  continueTo: string;
-};
+/**
+ * Sends someone who is already signed in away from the sign-in/sign-up pages: to `nextPath` when
+ * there is one, otherwise to their own dashboard. Paused while the form itself is signing them in,
+ * because the form then redirects (and toasts) on its own.
+ */
+export function useRedirectSignedIn(session: AuthSession | null | undefined, nextPath: string | null, paused: boolean) {
+  const router = useRouter();
+  const target = session ? (nextPath ?? dashboardHome(session.user.role)) : null;
 
-/** Shown on the auth pages when someone who is already signed in opens them. */
-export function SignedInNotice({ name, role, continueTo }: SignedInNoticeProps) {
-  const { signOut, isSigningOut } = useSignOut();
+  useEffect(() => {
+    if (target && !paused) router.replace(target);
+  }, [target, paused, router]);
 
+  return Boolean(target) && !paused;
+}
+
+/** Shown for a moment while a signed-in visitor is being redirected off an auth page. */
+export function RedirectingNotice() {
   return (
-    <div className="rounded-xl border border-border bg-secondary/60 p-5">
-      <div className="flex items-start gap-3">
-        <UserRoundCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent" />
-        <p className="text-sm leading-6 text-muted-foreground">
-          You’re signed in as <strong className="text-foreground">{name}</strong> ({roleLabels[role].toLowerCase()} account).
-        </p>
-      </div>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-        <Button asChild className="h-11 flex-1 rounded-lg">
-          <Link href={continueTo}>Continue</Link>
-        </Button>
-        <Button type="button" variant="outline" onClick={signOut} disabled={isSigningOut} className="h-11 flex-1 rounded-lg">
-          {isSigningOut ? "Signing out…" : "Sign out"}
-        </Button>
-      </div>
-    </div>
+    <p role="status" className="rounded-xl border border-border bg-secondary/60 p-5 text-sm text-muted-foreground">
+      You’re already signed in. Taking you to your dashboard…
+    </p>
   );
 }

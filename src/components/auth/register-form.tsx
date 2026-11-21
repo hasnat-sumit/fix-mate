@@ -4,14 +4,15 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { UserRound, Wrench, type LucideIcon } from "lucide-react";
-import { FormAlert, SignedInNotice } from "@/components/auth/auth-form-parts";
+import { toast } from "sonner";
+import { FormAlert, RedirectingNotice, useRedirectSignedIn } from "@/components/auth/auth-form-parts";
 import { PasswordInput } from "@/components/auth/password-input";
 import { describedBy, FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { describeAuthError, unreachableError, type AuthErrorKind } from "@/lib/auth-errors";
-import { authRoutes, safeRedirectPath, withReturnPath } from "@/lib/navigation";
+import { authRoutes, dashboardHome, safeRedirectPath, withReturnPath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type AccountType = "customer" | "technician";
@@ -20,15 +21,16 @@ type Errors = Partial<Record<keyof Values, string>>;
 
 const fieldOrder: (keyof Values)[] = ["name", "email", "password", "confirmPassword"];
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const minPasswordLength = 8;
+const minPasswordLength = 6;
 const maxPasswordLength = 128;
+const passwordHint = `At least ${minPasswordLength} characters, with an uppercase and a lowercase letter.`;
 
 const accountTypes: { value: AccountType; title: string; description: string; icon: LucideIcon }[] = [
   { value: "customer", title: "I need a repair", description: "Find technicians and request services.", icon: UserRound },
   { value: "technician", title: "I’m a technician", description: "List your repair services and take jobs.", icon: Wrench },
 ];
 
-// Mirrors the server rules (server/src/lib/auth.ts); the server remains the source of truth.
+// Mirrors the server rules (fixmate-server: src/lib/auth.ts); the server remains the source of truth.
 function validate(values: Values): Errors {
   const errors: Errors = {};
   const name = values.name.trim();
@@ -38,8 +40,10 @@ function validate(values: Values): Errors {
   if (!values.email.trim()) errors.email = "Enter your email address.";
   else if (!emailPattern.test(values.email.trim())) errors.email = "Enter a valid email address.";
 
-  if (values.password.length < minPasswordLength) errors.password = `Use at least ${minPasswordLength} characters.`;
+  if (values.password.length < minPasswordLength) errors.password = `Password must be at least ${minPasswordLength} characters.`;
   else if (values.password.length > maxPasswordLength) errors.password = `Use ${maxPasswordLength} characters or fewer.`;
+  else if (!/[A-Z]/.test(values.password)) errors.password = "Password must contain at least one uppercase letter.";
+  else if (!/[a-z]/.test(values.password)) errors.password = "Password must contain at least one lowercase letter.";
 
   if (!values.confirmPassword) errors.confirmPassword = "Re-enter your password.";
   else if (values.confirmPassword !== values.password) errors.confirmPassword = "Passwords don’t match.";
@@ -49,18 +53,19 @@ function validate(values: Values): Errors {
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = safeRedirectPath(searchParams.get("next"));
+  const nextPath = safeRedirectPath(searchParams.get("next"), null);
   const { data: session } = authClient.useSession();
 
-  const [accountType, setAccountType] = useState<AccountType>(searchParams.get("type") === "technician" ? "technician" : "customer");
+  const [accountType, setAccountType] = useState<AccountType>(
+    searchParams.get("role") === "technician" || searchParams.get("type") === "technician" ? "technician" : "customer",
+  );
   const [values, setValues] = useState<Values>({ name: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<{ message: string; kind: AuthErrorKind } | null>(null);
   const [status, setStatus] = useState<"idle" | "submitting" | "redirecting">("idle");
 
-  if (session && status !== "redirecting") {
-    return <SignedInNotice name={session.user.name} role={session.user.role} continueTo={nextPath} />;
-  }
+  const isRedirectingSignedIn = useRedirectSignedIn(session, nextPath, status !== "idle");
+  if (isRedirectingSignedIn) return <RedirectingNotice />;
 
   function updateField(field: keyof Values, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -80,24 +85,23 @@ export function RegisterForm() {
 
     setStatus("submitting");
     try {
-      // `accountType` is not a user field, so Better Auth's client types don't list it. The server's
-      // sign-up hook reads it from the request body and accepts only "customer" or "technician".
-      const body: { name: string; email: string; password: string; accountType: AccountType } = {
-        name: values.name.trim(),
-        email: values.email.trim(),
-        password: values.password,
-        accountType,
-      };
-      const { error } = await authClient.signUp.email(body);
+      // `role` is input-only on the server (Better Auth's client types mark it read-only). The server's
+      // sign-up hook keeps "customer" or "technician" and saves anything else as "customer".
+      const body = { name: values.name.trim(), email: values.email.trim(), password: values.password, role: accountType };
+      const { error } = await authClient.signUp.email(body as Parameters<typeof authClient.signUp.email>[0]);
       if (error) {
-        setFormError(describeAuthError(error));
+        const described = describeAuthError(error);
+        setFormError(described);
+        toast.error(described.message);
         setStatus("idle");
         return;
       }
       setStatus("redirecting");
-      router.replace(nextPath);
+      toast.success(`Welcome to FixMate, ${body.name.split(" ")[0]}! Your ${accountType} account is ready.`);
+      router.replace(nextPath ?? dashboardHome(accountType));
     } catch {
       setFormError(unreachableError);
+      toast.error(unreachableError.message);
       setStatus("idle");
     }
   }
@@ -110,7 +114,7 @@ export function RegisterForm() {
         <FormAlert>
           {formError.message}{" "}
           {formError.kind === "duplicate-email" ? (
-            <Link href={withReturnPath(authRoutes.signIn, nextPath)} className="font-semibold text-accent underline underline-offset-4">
+            <Link href={nextPath ? withReturnPath(authRoutes.signIn, nextPath) : authRoutes.signIn} className="font-semibold text-accent underline underline-offset-4">
               Sign in instead
             </Link>
           ) : null}
@@ -132,7 +136,7 @@ export function RegisterForm() {
               >
                 <input
                   type="radio"
-                  name="accountType"
+                  name="role"
                   value={value}
                   checked={isSelected}
                   onChange={() => setAccountType(value)}
@@ -179,7 +183,7 @@ export function RegisterForm() {
         />
       </FormField>
 
-      <FormField id="register-password" label="Password" error={errors.password} hint={`At least ${minPasswordLength} characters.`}>
+      <FormField id="register-password" label="Password" error={errors.password} hint={passwordHint}>
         <PasswordInput
           id="register-password"
           name="password"
@@ -212,7 +216,7 @@ export function RegisterForm() {
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
-          href={withReturnPath(authRoutes.signIn, nextPath)}
+          href={nextPath ? withReturnPath(authRoutes.signIn, nextPath) : authRoutes.signIn}
           className="font-semibold text-accent underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           Sign in
