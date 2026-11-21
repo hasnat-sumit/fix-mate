@@ -12,4 +12,4 @@ All photographs are locally stored, resized, and encoded as WebP for the homepag
 | `television-repair.webp` | Television repair service | Bulat843 | [Technician Working on Vintage TV in Workshop](https://www.pexels.com/photo/technician-working-on-vintage-tv-in-workshop-32208768/) |
 | `electrical-service.webp` | Electrical services | mickael ange konan | [Female Technician Working on Electrical Control Panel](https://www.pexels.com/photo/female-technician-working-on-electrical-control-panel-34526423/) |
 
-The FixMate logo SVGs are original project artwork and do not use stock graphics.
+The FixMate logo SVGs are original project artwork; the wrench mark is the [Lucide](https://lucide.dev) “wrench” icon (ISC license).
