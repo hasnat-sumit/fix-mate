@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,7 +6,8 @@ import { Container } from "@/components/container";
 import { PublicFooter } from "@/components/public-footer";
 import { PublicNavbar } from "@/components/public-navbar";
 import { SectionHeading } from "@/components/section-heading";
-import { isRemoteImage, ServiceCard } from "@/components/service-card";
+import { ServiceCard } from "@/components/service-card";
+import { ServiceImage } from "@/components/service-image";
 import { ServiceRequestForm } from "@/components/services/service-request-form";
 import {
   Breadcrumb,
@@ -112,15 +112,7 @@ export default async function ServiceDetailsPage({ params }: PageProps<"/service
         <Container className="grid grid-cols-1 gap-10 py-8 sm:py-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12 lg:pb-20">
           <div className="min-w-0">
             <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted">
-              <Image
-                src={service.image}
-                alt={service.title}
-                fill
-                preload
-                unoptimized={isRemoteImage(service.image)}
-                sizes="(min-width: 1024px) 760px, 100vw"
-                className="object-cover"
-              />
+              <ServiceImage src={service.image} alt={service.title} preload sizes="(min-width: 1024px) 760px, 100vw" />
               {service.isFeatured ? (
                 <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-card/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground shadow-sm backdrop-blur-sm">
                   Featured

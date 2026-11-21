@@ -36,3 +36,25 @@ export function withReturnPath(route: string, pathname: string) {
   const separator = route.includes("?") ? "&" : "?";
   return `${route}${separator}next=${encodeURIComponent(pathname)}`;
 }
+
+export type DashboardLink = { label: string; href: string };
+
+/** Dashboard sections per role. The first entry is each role's dashboard home. */
+export const dashboardLinks = {
+  customer: [
+    { label: "My requests", href: "/dashboard/bookings" },
+    { label: "Profile", href: "/dashboard/profile" },
+  ],
+  technician: [
+    { label: "Jobs", href: "/dashboard/jobs" },
+    { label: "My services", href: "/dashboard/services" },
+    { label: "Profile", href: "/dashboard/profile" },
+  ],
+  admin: [
+    { label: "Overview", href: "/dashboard/admin" },
+    { label: "Service approvals", href: "/dashboard/admin/services" },
+    { label: "Users", href: "/dashboard/admin/users" },
+    { label: "Bookings", href: "/dashboard/admin/bookings" },
+    { label: "Profile", href: "/dashboard/profile" },
+  ],
+} as const satisfies Record<keyof typeof roleLabels, DashboardLink[]>;

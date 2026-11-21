@@ -50,7 +50,13 @@ export function PublicNavbar() {
             <Skeleton aria-hidden="true" className="h-11 w-48 rounded-full" />
           ) : session ? (
             <>
-              <UserIdentity name={session.user.name} role={session.user.role} compact />
+              <Link
+                href="/dashboard"
+                aria-label={`Dashboard — ${session.user.name}`}
+                className="rounded-full pr-1 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <UserIdentity name={session.user.name} role={session.user.role} compact />
+              </Link>
               <Button
                 type="button"
                 variant="outline"

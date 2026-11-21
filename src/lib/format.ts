@@ -5,3 +5,23 @@ const withCents = new Intl.NumberFormat("en-US", { style: "currency", currency: 
 export function formatPrice(cents: number) {
   return cents % 100 === 0 ? wholeDollars.format(cents / 100) : withCents.format(cents / 100);
 }
+
+const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
+const dateTimeFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+
+/** A calendar date ("2026-11-23") shown as-is, without time-zone shifting: "Nov 23, 2026". */
+export function formatCalendarDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return dateFormat.format(new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1));
+}
+
+/** A timestamp in the viewer's local time: "Nov 23, 2026, 4:05 PM". */
+export function formatDateTime(value: string) {
+  return dateTimeFormat.format(new Date(value));
+}
+
+/** "in_progress" -> "In progress". */
+export function formatStatus(status: string) {
+  const text = status.replace(/_/g, " ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

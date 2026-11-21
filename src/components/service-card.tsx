@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, Star, UserRound } from "lucide-react";
+import { ServiceImage } from "@/components/service-image";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
 import type { ServiceSummary } from "@/lib/services-api";
@@ -9,26 +9,16 @@ type ServiceCardProps = {
   service: ServiceSummary;
 };
 
-/**
- * Technician-supplied images are arbitrary https URLs, so they bypass the image optimizer
- * (which would otherwise act as an open proxy for any host). Bundled /images/ files are optimized.
- */
-export function isRemoteImage(src: string) {
-  return src.startsWith("https://");
-}
-
 export function ServiceCard({ service }: ServiceCardProps) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_44px_rgba(20,44,60,0.1)]">
       <div className="relative h-[168px] overflow-hidden bg-muted">
         {/* Decorative: the service title right below describes the card. */}
-        <Image
+        <ServiceImage
           src={service.image}
           alt=""
-          fill
-          unoptimized={isRemoteImage(service.image)}
           sizes="(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          className="transition-transform duration-300 group-hover:scale-[1.03]"
         />
         {service.isFeatured ? (
           <span className="absolute left-4 top-4 rounded-full border border-white/50 bg-card/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground shadow-sm backdrop-blur-sm">

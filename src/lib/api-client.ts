@@ -1,3 +1,4 @@
+import { refreshServiceCatalog } from "@/app/actions/service-catalog";
 import { getApiToken } from "@/lib/auth-client";
 
 /** An error response from the FixMate API, or `status: 0` when the request didn't reach it. */
@@ -42,4 +43,10 @@ export async function apiRequest<T>(path: string, options: { method?: string; bo
     throw new ApiError(response.status, json?.code ?? "UNKNOWN", json?.message ?? "Something went wrong. Please try again.", json?.details);
   }
   return (json as { data: T }).data;
+}
+
+/** After a service change: expire the cached public service pages (verified server-side). Best effort. */
+export async function refreshServiceCatalogCache() {
+  const token = await getApiToken();
+  if (token) await refreshServiceCatalog(token).catch(() => undefined);
 }

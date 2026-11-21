@@ -34,7 +34,7 @@ export function MobileNavigation({ session, isSessionPending, onSignOut, isSigni
   return (
     <div id="mobile-navigation" className="absolute inset-x-0 top-full border-b border-border bg-card px-5 pb-5 pt-3 shadow-lg md:hidden">
       <nav aria-label="Mobile navigation" className="flex flex-col">
-        {publicNavLinks.map((link) => {
+        {[...publicNavLinks, ...(session ? [{ label: "Dashboard", href: "/dashboard" }] : [])].map((link) => {
           const isActive = isActiveNavLink(pathname, link.href);
 
           return (

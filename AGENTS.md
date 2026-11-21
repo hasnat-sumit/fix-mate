@@ -32,7 +32,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Preserve the existing Next.js 16, React 19, TypeScript and Tailwind CSS v4 setup.
 - Use shadcn/ui for UI components.
 - Use npm as the package manager.
-- Keep the Express backend in a separate `server/` directory.
+- Keep the Express backend in its own separate repository (fixmate-server).
 - Do not implement the backend until explicitly approved.
 - Focus on frontend UI/UX first.
 - Maintain exactly four application collections: users, services, bookings and payments. Better Auth internal storage is separate.
