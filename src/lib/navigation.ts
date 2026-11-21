@@ -39,6 +39,9 @@ export function withReturnPath(route: string, pathname: string) {
 
 export type DashboardLink = { label: string; href: string };
 
+/** The customer’s booking list (linked after a repair request). */
+export const myBookingsHref = "/dashboard/bookings";
+
 /** Where each role lands after signing in, and the target of "Dashboard" links. */
 export function dashboardHome(role: keyof typeof roleLabels) {
   return dashboardLinks[role][0].href;
