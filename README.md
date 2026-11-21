@@ -15,9 +15,9 @@ FixMate is a full-stack, role-based platform for booking device and home-applian
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin | `<ADMIN_EMAIL>` | `<ADMIN_PASSWORD>` |
-| Technician | `rafiq.technician@example.com` | `<SEED_USER_PASSWORD>` |
-| Customer | `arif.customer@example.com` | `<SEED_USER_PASSWORD>` |
+| Admin | `khsumit28@gmail.com` | `_Qwerty142528@` |
+| Technician | `rafiq.technician@example.com` | `_Qwerty142528@` |
+| Customer | `arif.customer@example.com` | `_Qwerty142528@` |
 
 More seeded accounts (same password): technicians `nusrat.technician@example.com`, `tanvir.technician@example.com`; customer `sadia.customer@example.com`. Rafiq has a job in every status; Arif has a completed job waiting for payment.
 
