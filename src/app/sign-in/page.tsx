@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Sign in to your FixMate account to request repairs or manage your repair services.",
 };
 
-export default function LoginPage() {
+export default function SignInPage() {
   return (
     <AuthShell
       eyebrow="Welcome back"

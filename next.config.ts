@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${apiOrigin}/api/:path*` }];
   },
+  // Old auth URLs from earlier versions keep working.
+  async redirects() {
+    return [
+      { source: "/login", destination: "/sign-in", permanent: true },
+      { source: "/register", destination: "/sign-up", permanent: true },
+    ];
+  },
   experimental: {
     agentFeedback: true,
   },

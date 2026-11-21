@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Join FixMate as a customer to request repairs, or as a technician to offer your repair services.",
 };
 
-export default function RegisterPage() {
+export default function SignUpPage() {
   return (
     <AuthShell
       eyebrow="Join FixMate"
@@ -21,7 +21,7 @@ export default function RegisterPage() {
         "New services are reviewed before they appear publicly.",
       ]}
     >
-      {/* The form reads ?type= and ?next= on the client, so the rest of the page can be prerendered. */}
+      {/* The form reads ?role= and ?next= on the client, so the rest of the page can be prerendered. */}
       <Suspense fallback={<AuthFormSkeleton fields={4} />}>
         <RegisterForm />
       </Suspense>
