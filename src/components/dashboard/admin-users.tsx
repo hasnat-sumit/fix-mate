@@ -2,69 +2,193 @@
 
 import { useState, type FormEvent } from "react";
 import { Search } from "lucide-react";
-import { FormAlert } from "@/components/auth/auth-form-parts";
-import { DataState, PageHeader, Pager, StatusBadge, selectClassName } from "@/components/dashboard/dashboard-ui";
+import { toast } from "sonner";
+import { UserAvatar } from "@/components/auth/user-identity";
+import { DataTable, type Column } from "@/components/dashboard/data-table";
+import { DataState, PageHeader, Pager, selectClassName, StatusBadge } from "@/components/dashboard/dashboard-ui";
 import { useApiQuery } from "@/components/dashboard/use-api-query";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ApiError, apiRequest } from "@/lib/api-client";
-import { authClient } from "@/lib/auth-client";
+import { authClient, type UserRole } from "@/lib/auth-client";
 import type { AdminUser, Paged } from "@/lib/dashboard-types";
-import { formatDateTime } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { roleLabels } from "@/lib/navigation";
 
-type Filters = { role: string; status: string; q: string };
+const roles = Object.keys(roleLabels) as UserRole[];
+const errorMessage = (error: unknown) => (error instanceof ApiError ? error.message : "Something went wrong. Please try again.");
+const articleFor = (role: UserRole) => (role === "admin" ? "an" : "a");
 
+type PendingChange = { user: AdminUser; kind: "role"; role: UserRole } | { user: AdminUser; kind: "status"; status: AdminUser["status"] };
+
+/** Manage Users: every account, with role changes (never your own) and suspend / reactivate. */
 export function AdminUsers() {
   const { data: session } = authClient.useSession();
-  const [filters, setFilters] = useState<Filters>({ role: "", status: "", q: "" });
-  const [draftQuery, setDraftQuery] = useState("");
+  const [role, setRole] = useState<UserRole | "">("");
+  const [search, setSearch] = useState("");
+  const [draftSearch, setDraftSearch] = useState("");
   const [page, setPage] = useState(1);
-  const search = new URLSearchParams({ page: String(page) });
-  for (const [key, value] of Object.entries(filters)) if (value) search.set(key, value);
-  const { data, error, isLoading, reload } = useApiQuery<Paged<AdminUser>>(`/api/admin/users?${search.toString()}`);
+  const query = new URLSearchParams({ page: String(page), ...(role ? { role } : {}), ...(search ? { search } : {}) });
+  const { data, error, isLoading, reload } = useApiQuery<Paged<AdminUser>>(`/api/admin/users?${query.toString()}`);
 
-  function setFilter(key: keyof Filters, value: string) {
-    setFilters((current) => ({ ...current, [key]: value }));
-    setPage(1);
-  }
+  const [pending, setPending] = useState<PendingChange | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFilter("q", draftQuery.trim());
+    setSearch(draftSearch.trim());
+    setPage(1);
   }
 
-  return (
-    <>
-      <PageHeader title="Users" description="Everyone with a FixMate account. Suspended users are signed out and can’t sign in or use the API." />
-      <form role="search" aria-label="Filter users" onSubmit={submitSearch} className="mt-6 grid grid-cols-1 gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_auto_auto_auto] lg:items-end">
-        <div>
-          <label htmlFor="user-search" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-            Name or email
-          </label>
-          <Input id="user-search" type="search" value={draftQuery} onChange={(event) => setDraftQuery(event.target.value)} className="h-10 bg-background" />
+  async function confirmChange() {
+    if (!pending) return;
+    setIsSaving(true);
+    try {
+      if (pending.kind === "role") {
+        await apiRequest(`/api/admin/users/${pending.user._id}/role`, { method: "PATCH", body: { role: pending.role } });
+        toast.success(`${pending.user.name} is now ${articleFor(pending.role)} ${roleLabels[pending.role].toLowerCase()}.`);
+      } else {
+        await apiRequest(`/api/admin/users/${pending.user._id}/status`, { method: "PATCH", body: { status: pending.status } });
+        toast.success(pending.status === "suspended" ? `${pending.user.name} is suspended and signed out.` : `${pending.user.name} is active again.`);
+      }
+      setPending(null);
+    } catch (caught) {
+      toast.error(errorMessage(caught));
+    } finally {
+      setIsSaving(false);
+      reload();
+    }
+  }
+
+  const columns: Column<AdminUser>[] = [
+    {
+      header: "User",
+      className: "min-w-[240px]",
+      cell: (user) => (
+        <div className="flex items-center gap-3">
+          <UserAvatar name={user.name} image={user.image} className="size-10" />
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">
+              {user.name}
+              {user._id === session?.user.id ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(you)</span> : null}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          </div>
         </div>
-        <div>
-          <label htmlFor="user-role" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-            Account type
-          </label>
-          <select id="user-role" value={filters.role} onChange={(event) => setFilter("role", event.target.value)} className={`${selectClassName} w-full`}>
-            <option value="">All</option>
-            {Object.entries(roleLabels).map(([value, label]) => (
+      ),
+    },
+    {
+      header: "Role",
+      cell: (user) => {
+        const isSelf = user._id === session?.user.id;
+        return (
+          <select
+            aria-label={`Role for ${user.name}`}
+            value={user.role}
+            disabled={isSelf}
+            title={isSelf ? "You can’t change your own role" : undefined}
+            onChange={(event) => setPending({ user, kind: "role", role: event.target.value as UserRole })}
+            className={selectClassName}
+          >
+            {roles.map((value) => (
               <option key={value} value={value}>
-                {label}
+                {roleLabels[value]}
               </option>
             ))}
           </select>
+        );
+      },
+    },
+    { header: "Status", cell: (user) => <StatusBadge status={user.status} /> },
+    { header: "Joined", cell: (user) => <span className="whitespace-nowrap tabular-nums">{formatDate(user.createdAt)}</span> },
+    {
+      header: "Access",
+      hideLabelOnMobile: true,
+      cell: (user) =>
+        user.role === "admin" ? (
+          <span className="text-xs text-muted-foreground">Admins can’t be suspended</span>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setPending({ user, kind: "status", status: user.status === "active" ? "suspended" : "active" })}
+            className={user.status === "active" ? "h-9 w-full rounded-lg px-3 text-error md:w-auto" : "h-9 w-full rounded-lg px-3 md:w-auto"}
+          >
+            {user.status === "active" ? "Suspend" : "Reactivate"}
+          </Button>
+        ),
+    },
+  ];
+
+  const dialog = (() => {
+    if (!pending) return { title: "", description: null, confirm: "", destructive: false };
+    if (pending.kind === "role") {
+      return {
+        title: "Change this user’s role?",
+        description: (
+          <>
+            <strong className="text-foreground">{pending.user.name}</strong> will change from {roleLabels[pending.user.role]} to{" "}
+            <strong className="text-foreground">{roleLabels[pending.role]}</strong>. Their dashboard and permissions change on their next request.
+          </>
+        ),
+        confirm: "Change role",
+        destructive: false,
+      };
+    }
+    return pending.status === "suspended"
+      ? {
+          title: "Suspend this account?",
+          description: (
+            <>
+              <strong className="text-foreground">{pending.user.name}</strong> will be signed out everywhere and can’t sign in until reactivated. Their services are
+              hidden from the public pages.
+            </>
+          ),
+          confirm: "Suspend",
+          destructive: true,
+        }
+      : {
+          title: "Reactivate this account?",
+          description: (
+            <>
+              <strong className="text-foreground">{pending.user.name}</strong> will be able to sign in and use FixMate again.
+            </>
+          ),
+          confirm: "Reactivate",
+          destructive: false,
+        };
+  })();
+
+  return (
+    <>
+      <PageHeader title="Manage Users" description="Everyone with a FixMate account. Change a user’s role, or suspend an account to sign it out and block access." />
+      <form role="search" aria-label="Filter users" onSubmit={submitSearch} className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label htmlFor="user-search" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+            Search by name or email
+          </label>
+          <Input id="user-search" type="search" value={draftSearch} onChange={(event) => setDraftSearch(event.target.value)} className="h-10 bg-background" />
         </div>
         <div>
-          <label htmlFor="user-status" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-            Status
+          <label htmlFor="user-role" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+            Role
           </label>
-          <select id="user-status" value={filters.status} onChange={(event) => setFilter("status", event.target.value)} className={`${selectClassName} w-full`}>
-            <option value="">All</option>
-            <option value="active">Active</option>
-            <option value="suspended">Suspended</option>
+          <select
+            id="user-role"
+            value={role}
+            onChange={(event) => {
+              setRole(event.target.value as UserRole | "");
+              setPage(1);
+            }}
+            className={`${selectClassName} w-full sm:w-40`}
+          >
+            <option value="">All roles</option>
+            {roles.map((value) => (
+              <option key={value} value={value}>
+                {roleLabels[value]}
+              </option>
+            ))}
           </select>
         </div>
         <Button type="submit" className="h-10 rounded-lg px-4">
@@ -72,85 +196,24 @@ export function AdminUsers() {
         </Button>
       </form>
       <p aria-live="polite" className="mt-4 text-sm tabular-nums text-muted-foreground">
-        {data ? `${data.total} ${data.total === 1 ? "account" : "accounts"}` : ""}
+        {data ? `${data.total} ${data.total === 1 ? "user" : "users"}` : ""}
       </p>
-      <DataState
-        isLoading={isLoading}
-        error={error}
-        isEmpty={!data || data.items.length === 0}
-        emptyTitle="No matching accounts"
-        emptyDescription="Try a different search or filter."
-        onRetry={reload}
-      >
-        <ul className="mt-4 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-          {data?.items.map((user) => (
-            <li key={user.id}>
-              <UserRow user={user} isSelf={user.id === session?.user.id} onChanged={reload} />
-            </li>
-          ))}
-        </ul>
+      <DataState isLoading={isLoading} error={error} isEmpty={!data || data.items.length === 0} emptyTitle="No users found" emptyDescription="Try a different search or role." onRetry={reload}>
+        {data ? <DataTable caption="Users" rows={data.items} columns={columns} rowKey={(user) => user._id} /> : null}
         {data ? <Pager page={data.page} pageCount={data.pageCount} onChange={setPage} /> : null}
       </DataState>
+
+      <ConfirmDialog
+        open={pending !== null}
+        onOpenChange={(open) => !open && setPending(null)}
+        title={dialog.title}
+        description={dialog.description}
+        confirmLabel={dialog.confirm}
+        cancelLabel="Cancel"
+        destructive={dialog.destructive}
+        isBusy={isSaving}
+        onConfirm={confirmChange}
+      />
     </>
-  );
-}
-
-function UserRow({ user, isSelf, onChanged }: { user: AdminUser; isSelf: boolean; onChanged: () => void }) {
-  const [confirming, setConfirming] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const canChange = user.role !== "admin" && !isSelf;
-  const nextStatus = user.status === "active" ? "suspended" : "active";
-
-  async function changeStatus() {
-    setIsBusy(true);
-    setError(null);
-    try {
-      await apiRequest(`/api/admin/users/${user.id}`, { method: "PATCH", body: { status: nextStatus } });
-      setConfirming(false);
-      onChanged();
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : "Something went wrong. Please try again.");
-    } finally {
-      setIsBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <p className="font-semibold text-foreground">
-          {user.name} {isSelf ? <span className="text-sm font-normal text-muted-foreground">(you)</span> : null}
-        </p>
-        <p className="break-all text-sm text-muted-foreground">{user.email}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {roleLabels[user.role]} · Joined <time dateTime={user.createdAt}>{formatDateTime(user.createdAt)}</time>
-        </p>
-        {error ? (
-          <div className="mt-2">
-            <FormAlert>{error}</FormAlert>
-          </div>
-        ) : null}
-      </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <StatusBadge status={user.status} />
-        {canChange ? (
-          confirming ? (
-            <>
-              <Button type="button" variant={nextStatus === "suspended" ? "destructive" : "default"} disabled={isBusy} onClick={changeStatus} className="h-9 rounded-lg px-3">
-                {isBusy ? "Saving…" : nextStatus === "suspended" ? `Confirm suspend` : "Confirm reactivate"}
-              </Button>
-              <Button type="button" variant="outline" disabled={isBusy} onClick={() => setConfirming(false)} className="h-9 rounded-lg px-3">
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <Button type="button" variant="outline" onClick={() => setConfirming(true)} className="h-9 rounded-lg px-3" aria-label={`${nextStatus === "suspended" ? "Suspend" : "Reactivate"} ${user.name}`}>
-              {nextStatus === "suspended" ? "Suspend" : "Reactivate"}
-            </Button>
-          )
-        ) : null}
-      </div>
-    </div>
   );
 }
