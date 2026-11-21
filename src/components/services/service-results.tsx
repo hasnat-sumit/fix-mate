@@ -140,7 +140,11 @@ export async function ServiceResults({ searchParams }: ServiceResultsProps) {
             <Button asChild variant="outline" className="mt-5 h-11 rounded-lg px-5">
               <Link href="/services">Clear filters</Link>
             </Button>
-          ) : null}
+          ) : (
+            <Button asChild className="mt-5 h-11 rounded-lg px-5">
+              <Link href="/sign-up?role=technician">List your repair service</Link>
+            </Button>
+          )}
         </div>
       )}
 

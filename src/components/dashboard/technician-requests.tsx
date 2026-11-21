@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, CircleCheckBig, Play, X } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable, type Column } from "@/components/dashboard/data-table";
@@ -178,6 +179,17 @@ export function TechnicianRequests() {
         isEmpty={!data || data.items.length === 0}
         emptyTitle={status ? `No ${formatStatus(status).toLowerCase()} requests` : "No requests yet"}
         emptyDescription={status ? "Try another status filter." : "When customers request your approved services, their jobs appear here."}
+        emptyAction={
+          status ? (
+            <Button type="button" variant="outline" onClick={() => setStatus("")} className="h-11 rounded-full px-5">
+              Show all requests
+            </Button>
+          ) : (
+            <Button asChild className="h-11 rounded-full px-5">
+              <Link href="/dashboard/technician/my-services">Review my services</Link>
+            </Button>
+          )
+        }
         onRetry={reload}
       >
         {data ? <DataTable caption="Repair requests" rows={data.items} columns={columns} rowKey={(booking) => booking._id} /> : null}
