@@ -122,3 +122,15 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
 
 export const selectClassName =
   "h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/** Temporary content for dashboard sections that are still being built. */
+export function UpcomingSection({ title, description }: { title: string; description: string }) {
+  return (
+    <>
+      <PageHeader title={title} description={description} />
+      <div className="mt-6 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
+        This section is coming soon.
+      </div>
+    </>
+  );
+}

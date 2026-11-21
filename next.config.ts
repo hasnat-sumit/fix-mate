@@ -9,11 +9,14 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${apiOrigin}/api/:path*` }];
   },
-  // Old auth URLs from earlier versions keep working.
+  // URLs from earlier versions keep working.
   async redirects() {
     return [
       { source: "/login", destination: "/sign-in", permanent: true },
       { source: "/register", destination: "/sign-up", permanent: true },
+      { source: "/dashboard/bookings", destination: "/dashboard/customer/bookings", permanent: true },
+      { source: "/dashboard/jobs", destination: "/dashboard/technician/requests", permanent: true },
+      { source: "/dashboard/services", destination: "/dashboard/technician/my-services", permanent: true },
     ];
   },
   // Profile photos and service images uploaded through ImgBB.
