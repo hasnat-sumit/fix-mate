@@ -1,4 +1,4 @@
-// Response shapes of the authenticated API endpoints used by the dashboards (see server/src/modules).
+// Response shapes of the authenticated API endpoints used by the dashboards (see fixmate-server: src/modules).
 
 import type { UserRole } from "@/lib/auth-client";
 
@@ -10,25 +10,60 @@ export type Paged<T> = {
   pageCount: number;
 };
 
-export type BookingStatus = "pending" | "accepted" | "in_progress" | "completed" | "rejected" | "cancelled";
-export const bookingStatuses: BookingStatus[] = ["pending", "accepted", "in_progress", "completed", "rejected", "cancelled"];
+export const bookingStatuses = ["requested", "accepted", "in-progress", "completed", "rejected", "cancelled"] as const;
+export type BookingStatus = (typeof bookingStatuses)[number];
+export type PaymentStatus = "unpaid" | "paid";
 
+/** A booking (repair job) as the API returns it. Service, technician and customer details are copies. */
 export type Booking = {
-  id: string;
-  service: { id: string; title: string; category: string; price: number };
-  amount: number;
+  _id: string;
+  serviceId: string;
+  serviceTitle: string;
+  serviceImage: string;
+  category: string;
+  basePrice: number;
+  technicianName: string;
+  technicianEmail: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  address: string;
+  /** ISO date-time at UTC midnight of the chosen calendar day. */
   preferredDate: string;
   problemDescription: string;
-  address: string;
-  contactPhone: string;
   status: BookingStatus;
-  paymentStatus: "unpaid" | "paid";
-  review: { rating: number; comment: string; createdAt: string } | null;
-  statusHistory: { status: BookingStatus; role: UserRole; note: string | null; at: string }[];
-  customer: { id: string | null; name: string };
-  technician: { id: string | null; name: string };
+  finalAmount: number;
+  paymentStatus: PaymentStatus;
+  statusHistory: { status: BookingStatus | "paid"; changedAt: string }[];
+  rating?: number;
+  review?: string;
   createdAt: string;
   updatedAt: string;
+};
+
+/** A payment record (the payments collection). */
+export type Payment = {
+  _id: string;
+  bookingId: string;
+  serviceTitle: string;
+  customerName: string;
+  customerEmail: string;
+  technicianName: string;
+  technicianEmail: string;
+  amount: number;
+  currency: "usd";
+  transactionId: string;
+  stripeSessionId: string;
+  paymentStatus: "paid";
+  paidAt: string;
+};
+
+export type CustomerStats = {
+  totalRequests: number;
+  activeJobs: number;
+  completedJobs: number;
+  totalPaid: number;
+  byStatus: Record<BookingStatus, number>;
 };
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";
@@ -79,6 +114,6 @@ export type Profile = {
 export type AdminStats = {
   users: Record<UserRole, number> & { suspended: number };
   services: Record<ApprovalStatus, number>;
-  bookings: Record<BookingStatus, number>;
+  bookings: Record<string, number>;
   revenue: { amount: number; payments: number };
 };

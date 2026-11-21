@@ -30,6 +30,8 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-information: var(--information);
+  --color-indigo: var(--indigo);
+  --color-chart-bar: var(--chart-bar);
   --color-elevated: var(--elevated);
   --color-hero: var(--hero);
   --color-hero-foreground: var(--hero-foreground);
@@ -77,6 +79,10 @@
   --warning: #e9a23b;
   --error: #dc5555;
   --information: #3979d6;
+  /* Status badge colour for "Accepted" (blue = requested, indigo = accepted, amber = in progress). */
+  --indigo: #5b57d1;
+  /* Single-series chart bars; validated against the card surface (dataviz validator). */
+  --chart-bar: #13968a;
   --elevated: #f9fbfa;
   --hero: #142c3c;
   --hero-foreground: #e8f1f5;
@@ -120,6 +126,8 @@
   --warning: #f1b85d;
   --error: #f27878;
   --information: #76a5f2;
+  --indigo: #9b97f2;
+  --chart-bar: #1fa898;
   --elevated: #233b49;
   --hero: #142c3c;
   --hero-foreground: #e8f1f5;

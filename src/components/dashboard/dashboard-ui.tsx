@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { AlertCircle, ArrowLeft, ArrowRight, Inbox } from "lucide-react";
+import { useId, type ReactNode } from "react";
+import { AlertCircle, ArrowLeft, ArrowRight, Inbox, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ApiError } from "@/lib/api-client";
@@ -24,12 +24,14 @@ type DataStateProps = {
   isEmpty: boolean;
   emptyTitle: string;
   emptyDescription: string;
+  /** A call to action in the empty state, e.g. a "Browse services" button. */
+  emptyAction?: ReactNode;
   onRetry: () => void;
   children: ReactNode;
 };
 
 /** Loading, error and empty states around a list. Existing data stays visible while reloading. */
-export function DataState({ isLoading, error, isEmpty, emptyTitle, emptyDescription, onRetry, children }: DataStateProps) {
+export function DataState({ isLoading, error, isEmpty, emptyTitle, emptyDescription, emptyAction, onRetry, children }: DataStateProps) {
   if (error && isEmpty) {
     return (
       <div role="alert" className="mt-6 flex flex-col items-start gap-3 rounded-2xl border border-error/30 bg-error/10 p-5 text-sm text-foreground">
@@ -59,6 +61,7 @@ export function DataState({ isLoading, error, isEmpty, emptyTitle, emptyDescript
         </span>
         <h2 className="mt-4 font-heading text-lg font-bold text-foreground">{emptyTitle}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">{emptyDescription}</p>
+        {emptyAction ? <div className="mt-5">{emptyAction}</div> : null}
       </div>
     );
   }
@@ -82,41 +85,115 @@ export function Pager({ page, pageCount, onChange }: { page: number; pageCount: 
   );
 }
 
-const statusTones: Record<string, string> = {
-  pending: "bg-warning/15 text-foreground",
-  accepted: "bg-information/15 text-foreground",
-  in_progress: "bg-accent/15 text-foreground",
-  completed: "bg-success/15 text-foreground",
-  approved: "bg-success/15 text-foreground",
-  active: "bg-success/15 text-foreground",
-  paid: "bg-success/15 text-foreground",
-  rejected: "bg-error/15 text-foreground",
-  suspended: "bg-error/15 text-foreground",
-  cancelled: "bg-muted text-muted-foreground",
-  unpaid: "bg-muted text-muted-foreground",
-};
-
-const dotTones: Record<string, string> = {
-  pending: "bg-warning",
-  accepted: "bg-information",
-  in_progress: "bg-accent",
-  completed: "bg-success",
-  approved: "bg-success",
-  active: "bg-success",
-  paid: "bg-success",
-  rejected: "bg-error",
-  suspended: "bg-error",
-  cancelled: "bg-muted-foreground",
-  unpaid: "bg-muted-foreground",
+/**
+ * Status colours, the same on every dashboard: Requested = blue, Accepted = indigo, In progress = amber,
+ * Completed = green, Rejected = red, Cancelled = gray; Paid = green, Unpaid = gray. Approval states reuse them.
+ */
+const statusTones: Record<string, { pill: string; dot: string }> = {
+  requested: { pill: "bg-information/12 text-information ring-information/30", dot: "bg-information" },
+  accepted: { pill: "bg-indigo/12 text-indigo ring-indigo/30", dot: "bg-indigo" },
+  "in-progress": { pill: "bg-warning/15 text-[color-mix(in_oklch,var(--warning),var(--foreground)_40%)] ring-warning/35", dot: "bg-warning" },
+  completed: { pill: "bg-success/12 text-success ring-success/30", dot: "bg-success" },
+  rejected: { pill: "bg-error/12 text-error ring-error/30", dot: "bg-error" },
+  cancelled: { pill: "bg-muted text-muted-foreground ring-border", dot: "bg-muted-foreground" },
+  paid: { pill: "bg-success/12 text-success ring-success/30", dot: "bg-success" },
+  unpaid: { pill: "bg-muted text-muted-foreground ring-border", dot: "bg-muted-foreground" },
+  pending: { pill: "bg-warning/15 text-[color-mix(in_oklch,var(--warning),var(--foreground)_40%)] ring-warning/35", dot: "bg-warning" },
+  approved: { pill: "bg-success/12 text-success ring-success/30", dot: "bg-success" },
+  active: { pill: "bg-success/12 text-success ring-success/30", dot: "bg-success" },
+  suspended: { pill: "bg-error/12 text-error ring-error/30", dot: "bg-error" },
 };
 
 /** A status pill. The text carries the meaning; colour only reinforces it. */
 export function StatusBadge({ status, label }: { status: string; label?: string }) {
+  const tone = statusTones[status] ?? statusTones.cancelled;
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold", statusTones[status] ?? "bg-muted text-foreground")}>
-      <span aria-hidden="true" className={cn("size-1.5 rounded-full", dotTones[status] ?? "bg-muted-foreground")} />
+    <span className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset", tone.pill)}>
+      <span aria-hidden="true" className={cn("size-1.5 rounded-full", tone.dot)} />
       {label ?? formatStatus(status)}
     </span>
+  );
+}
+
+/** Reusable overview stat card: label, big value, optional hint and icon. */
+export function StatCard({ label, value, hint, icon: Icon }: { label: string; value: string | number; hint?: string; icon: LucideIcon }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="mt-2 font-heading text-3xl font-extrabold tracking-[-0.04em] text-foreground tabular-nums">{value}</p>
+        {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
+      </div>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-accent">
+        <Icon aria-hidden="true" className="size-5" />
+      </span>
+    </div>
+  );
+}
+
+export function StatCardsSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div aria-busy="true" aria-label="Loading statistics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {Array.from({ length: count }, (_, index) => (
+        <Skeleton key={index} className="h-[118px] rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+type BarDatum = { label: string; value: number };
+
+/**
+ * Horizontal single-series bar chart: one validated hue (--chart-bar), bars <= 24px with a 4px rounded
+ * data end, the value at each tip, a per-bar hover/focus tooltip and a screen-reader table. No legend:
+ * the title names the one series.
+ */
+export function BarChart({ title, description, data, formatValue = String }: { title: string; description?: string; data: BarDatum[]; formatValue?: (value: number) => string }) {
+  const max = Math.max(1, ...data.map((datum) => datum.value));
+  const titleId = useId();
+
+  return (
+    <figure aria-labelledby={titleId} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <figcaption>
+        <p id={titleId} className="font-heading text-base font-bold text-foreground">{title}</p>
+        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+      </figcaption>
+      <div aria-hidden="true" className="mt-5 space-y-3">
+        {data.map((datum) => (
+          <div key={datum.label} className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
+            <span className="truncate text-sm text-muted-foreground">{datum.label}</span>
+            <div className="group/bar relative flex h-7 items-center border-l border-border">
+              <div
+                className="h-5 max-h-6 rounded-r-[4px] bg-chart-bar transition-[filter] group-hover/bar:brightness-110"
+                style={{ width: datum.value > 0 ? `max(${(datum.value / max) * 100}% - 40px, 4px)` : 0 }}
+              />
+              <span className="ml-2 text-sm font-semibold tabular-nums text-foreground">{formatValue(datum.value)}</span>
+              <span className="pointer-events-none absolute -top-9 left-0 z-10 hidden whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1.5 text-xs shadow-md group-hover/bar:block">
+                <strong className="font-semibold text-foreground tabular-nums">{formatValue(datum.value)}</strong>{" "}
+                <span className="text-muted-foreground">{datum.label}</span>
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <table className="sr-only">
+        <caption>{title}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Category</th>
+            <th scope="col">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((datum) => (
+            <tr key={datum.label}>
+              <th scope="row">{datum.label}</th>
+              <td>{formatValue(datum.value)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
   );
 }
 
