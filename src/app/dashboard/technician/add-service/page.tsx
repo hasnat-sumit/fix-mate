@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { TechnicianAddService } from "@/components/dashboard/technician-add-service";
 
 export const metadata: Metadata = { title: "Add a Service — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "Add a Service — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="Add a Service" description="List a new repair service. It appears publicly once an admin approves it." />;
+  return <TechnicianAddService />;
 }
