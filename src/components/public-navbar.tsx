@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowUpRight, LogOut, Menu, X } from "lucide-react";
-import { UserIdentity } from "@/components/auth/user-identity";
+import { Menu, X } from "lucide-react";
+import { UserMenu } from "@/components/auth/user-menu";
 import { useSignOut } from "@/components/auth/use-sign-out";
 import { Container } from "@/components/container";
 import { FixMateLogo } from "@/components/fixmate-logo";
@@ -47,39 +47,16 @@ export function PublicNavbar() {
           <ThemeToggle />
           {isPending ? (
             // Same footprint as the signed-out actions, so the header doesn't shift when the session loads.
-            <Skeleton aria-hidden="true" className="h-11 w-48 rounded-full" />
+            <Skeleton aria-hidden="true" className="h-11 w-44 rounded-full" />
           ) : session ? (
-            <>
-              <Link
-                href="/dashboard"
-                aria-label={`Dashboard — ${session.user.name}`}
-                className="rounded-full pr-1 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <UserIdentity name={session.user.name} role={session.user.role} compact />
-              </Link>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={signOut}
-                disabled={isSigningOut}
-                className="h-11 rounded-full px-4"
-              >
-                <LogOut aria-hidden="true" className="size-4" />
-                {isSigningOut ? "Signing out…" : "Sign out"}
-              </Button>
-            </>
+            <UserMenu user={session.user} />
           ) : (
             <>
-              <Link
-                href={withReturnPath(authRoutes.signIn, pathname)}
-                className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                Sign in
-              </Link>
+              <Button asChild variant="outline" className="h-11 rounded-full px-4 lg:px-5">
+                <Link href={withReturnPath(authRoutes.signIn, pathname)}>Sign In</Link>
+              </Button>
               <Button asChild className="h-11 rounded-full px-4 lg:px-5">
-                <Link href="/services">
-                  Get started <ArrowUpRight aria-hidden="true" className="size-4" />
-                </Link>
+                <Link href={authRoutes.register}>Sign Up</Link>
               </Button>
             </>
           )}
