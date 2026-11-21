@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { AdminBookings } from "@/components/dashboard/admin-bookings";
 
 export const metadata: Metadata = { title: "All Bookings — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "All Bookings — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="All Bookings" description="Every booking on FixMate, filterable by status." />;
+  return <AdminBookings />;
 }

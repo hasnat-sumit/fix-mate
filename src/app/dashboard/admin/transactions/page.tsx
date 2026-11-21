@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { UpcomingSection } from "@/components/dashboard/dashboard-ui";
+import { AdminTransactions } from "@/components/dashboard/admin-transactions";
 
 export const metadata: Metadata = { title: "Transactions — FixMate" };
 
@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: "Transactions — FixMate" };
 export const instant = false;
 
 export default function Page() {
-  return <UpcomingSection title="Transactions" description="Every payment made on FixMate, with the total revenue." />;
+  return <AdminTransactions />;
 }
