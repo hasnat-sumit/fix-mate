@@ -1,39 +1,38 @@
-// The seven service categories. Keep in sync with SERVICE_CATEGORIES in server/src/modules/services/services.model.ts.
+// The seven service categories. Keep in sync with SERVICE_CATEGORIES in fixmate-server: src/modules/services/services.model.ts.
 
-export type IconName =
-  | "smartphone"
-  | "laptop"
-  | "air-conditioning"
-  | "appliance"
-  | "television"
-  | "electrical"
-  | "other";
+export type IconName = "smartphone" | "laptop" | "air-conditioning" | "refrigerator" | "television" | "washing-machine" | "electrical";
+
+export const serviceCategoryNames = ["Smartphone", "Laptop & PC", "AC", "Refrigerator", "TV", "Washing Machine", "Electrical"] as const;
+export type ServiceCategoryName = (typeof serviceCategoryNames)[number];
+
+export const serviceModes = ["Home Visit", "Shop Drop-off"] as const;
+export type ServiceMode = (typeof serviceModes)[number];
 
 export type ServiceCategory = {
-  name: string;
+  name: ServiceCategoryName;
   icon: IconName;
   countLabel: string;
 };
 
 export const serviceCategories: ServiceCategory[] = [
-  { name: "Smartphone", icon: "smartphone", countLabel: "Screen, battery & more" },
+  { name: "Smartphone", icon: "smartphone", countLabel: "Screen, battery & port" },
   { name: "Laptop & PC", icon: "laptop", countLabel: "Repairs & tune-ups" },
-  { name: "Air Conditioning", icon: "air-conditioning", countLabel: "Cool, clean, efficient" },
-  { name: "Home Appliances", icon: "appliance", countLabel: "Everyday essentials" },
-  { name: "Television", icon: "television", countLabel: "Picture & sound" },
-  { name: "Electrical Services", icon: "electrical", countLabel: "Safe home electrics" },
-  { name: "Other Repairs", icon: "other", countLabel: "Tell us what you need" },
+  { name: "AC", icon: "air-conditioning", countLabel: "Servicing & gas refill" },
+  { name: "Refrigerator", icon: "refrigerator", countLabel: "Cooling & gas charging" },
+  { name: "TV", icon: "television", countLabel: "Display, power & mounting" },
+  { name: "Washing Machine", icon: "washing-machine", countLabel: "Drum, motor & drain" },
+  { name: "Electrical", icon: "electrical", countLabel: "Wiring & fittings" },
 ];
 
-export function serviceCategorySlug(category: string) {
-  return category
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+export function isServiceCategory(value: string | undefined): value is ServiceCategoryName {
+  return serviceCategoryNames.some((name) => name === value);
 }
 
-/** The category whose URL slug matches, if any (e.g. "laptop-and-pc" -> "Laptop & PC"). */
-export function categoryFromSlug(slug: string) {
-  return serviceCategories.find((category) => serviceCategorySlug(category.name) === slug);
+export function isServiceMode(value: string | undefined): value is ServiceMode {
+  return serviceModes.some((mode) => mode === value);
+}
+
+/** The /services URL pre-filtered to one category, e.g. /services?category=AC. */
+export function categoryHref(category: ServiceCategoryName) {
+  return `/services?${new URLSearchParams({ category }).toString()}`;
 }

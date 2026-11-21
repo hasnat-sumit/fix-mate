@@ -1,9 +1,9 @@
 const wholeDollars = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const withCents = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
 
-/** Formats a price stored in cents: 4900 -> "$49", 4950 -> "$49.50". */
-export function formatPrice(cents: number) {
-  return cents % 100 === 0 ? wholeDollars.format(cents / 100) : withCents.format(cents / 100);
+/** Formats a USD amount: 49 -> "$49", 49.5 -> "$49.50". */
+export function formatPrice(amount: number) {
+  return Number.isInteger(amount) ? wholeDollars.format(amount) : withCents.format(amount);
 }
 
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
@@ -20,8 +20,8 @@ export function formatDateTime(value: string) {
   return dateTimeFormat.format(new Date(value));
 }
 
-/** "in_progress" -> "In progress". */
+/** "in-progress" -> "In progress". */
 export function formatStatus(status: string) {
-  const text = status.replace(/_/g, " ");
+  const text = status.replace(/[_-]/g, " ");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }

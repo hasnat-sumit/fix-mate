@@ -1,23 +1,14 @@
-import {
-  AirVent,
-  LaptopMinimal,
-  Lightbulb,
-  Refrigerator,
-  Smartphone,
-  Tv,
-  Wrench,
-  type LucideIcon,
-} from "lucide-react";
+import { AirVent, LaptopMinimal, Lightbulb, Refrigerator, Smartphone, Tv, WashingMachine, type LucideIcon } from "lucide-react";
 import type { IconName } from "@/data/service-categories";
 
 const icons: Record<IconName, LucideIcon> = {
   smartphone: Smartphone,
   laptop: LaptopMinimal,
   "air-conditioning": AirVent,
-  appliance: Refrigerator,
+  refrigerator: Refrigerator,
   television: Tv,
+  "washing-machine": WashingMachine,
   electrical: Lightbulb,
-  other: Wrench,
 };
 
 type RepairIconProps = {

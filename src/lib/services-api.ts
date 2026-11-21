@@ -1,35 +1,38 @@
 import { cacheLife, cacheTag } from "next/cache";
+import type { ServiceCategoryName, ServiceMode } from "@/data/service-categories";
 import { apiOrigin } from "@/lib/api-origin";
 import type { ServiceSort } from "@/lib/services-url";
 
 // Server-side reads of the public service catalog. Each function is cached with `use cache`, so pages
 // can be prerendered and are refreshed in the background about once a minute. The "services" tag
-// lets later phases refresh them immediately with revalidateTag.
+// lets technician/admin changes refresh them immediately (see app/actions/service-catalog.ts).
 
-export type ServiceSummary = {
-  id: string;
+/** A service document as the API returns it (the `services` collection). */
+export type Service = {
+  _id: string;
   title: string;
-  category: string;
+  category: ServiceCategoryName;
   description: string;
-  /** Starting price in cents (USD). */
-  price: number;
   image: string;
-  availability: string;
-  isFeatured: boolean;
-  ratingAverage: number;
-  reviewCount: number;
-  technician: { id: string; name: string };
-};
-
-export type ServiceDetail = Omit<ServiceSummary, "technician"> & {
-  details: string;
-  includes: string[];
-  technician: { id: string; name: string; area: string | null; bio: string | null };
+  /** Starting price in USD. */
+  basePrice: number;
+  estimatedDuration: string;
+  serviceMode: ServiceMode;
+  serviceArea: string;
+  technicianName: string;
+  technicianEmail: string;
+  approvalStatus: "pending" | "approved" | "rejected";
+  isAvailable: boolean;
+  createdAt: string;
   updatedAt: string;
 };
 
+export type ServiceDetail = Service & {
+  technician: { name: string; image: string | null; area: string | null; bio: string | null };
+};
+
 export type ServiceList = {
-  items: ServiceSummary[];
+  items: Service[];
   page: number;
   limit: number;
   total: number;
@@ -37,11 +40,10 @@ export type ServiceList = {
 };
 
 type ServiceListParams = {
-  q?: string;
-  /** The category name, e.g. "Laptop & PC". */
-  category?: string;
+  search?: string;
+  category?: ServiceCategoryName;
+  serviceMode?: ServiceMode;
   sort?: ServiceSort;
-  featured?: boolean;
   page?: number;
   limit?: number;
 };
@@ -52,32 +54,37 @@ async function apiGet<T>(path: string): Promise<T | null> {
   try {
     response = await fetch(`${apiOrigin}${path}`, { headers: { accept: "application/json" } });
   } catch (error) {
-    throw new Error(
-      `Could not reach the FixMate API at ${apiOrigin}. Start it with "cd server && npm run dev", or set API_URL.`,
-      { cause: error },
-    );
+    throw new Error(`Could not reach the FixMate API at ${apiOrigin}. Start fixmate-server with "npm run dev", or set API_URL.`, {
+      cause: error,
+    });
   }
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`FixMate API request ${path} failed with status ${response.status}`);
   return ((await response.json()) as { data: T }).data;
 }
 
+/** Approved, available services. Search, filters, sort and pagination all run on the server. */
 export async function getServices(params: ServiceListParams = {}): Promise<ServiceList> {
   "use cache";
   cacheLife("minutes");
   cacheTag("services");
 
-  const search = new URLSearchParams();
-  if (params.q) search.set("q", params.q);
-  if (params.category) search.set("category", params.category);
-  if (params.sort) search.set("sort", params.sort);
-  if (params.featured !== undefined) search.set("featured", String(params.featured));
-  if (params.page) search.set("page", String(params.page));
-  if (params.limit) search.set("limit", String(params.limit));
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") query.set(key, String(value));
+  }
 
-  const list = await apiGet<ServiceList>(`/api/services?${search.toString()}`);
+  const list = await apiGet<ServiceList>(`/api/services?${query.toString()}`);
   if (!list) throw new Error("FixMate API returned 404 for the service list");
   return list;
+}
+
+/** The 6 latest approved, available services for the home page. */
+export async function getFeaturedServices(): Promise<Service[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("services");
+  return (await apiGet<Service[]>("/api/services/featured")) ?? [];
 }
 
 /** Public details of an approved service, or null if it doesn't exist or isn't public. */

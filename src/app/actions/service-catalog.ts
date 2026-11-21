@@ -11,7 +11,7 @@ import { apiOrigin } from "@/lib/api-origin";
  * only technicians and admins can trigger a refresh.
  */
 export async function refreshServiceCatalog(token: string) {
-  const response = await fetch(`${apiOrigin}/api/users/me`, { headers: { authorization: `Bearer ${token}` } }).catch(() => null);
+  const response = await fetch(`${apiOrigin}/api/users/profile`, { headers: { authorization: `Bearer ${token}` } }).catch(() => null);
   if (!response?.ok) return { refreshed: false };
 
   const { data } = (await response.json()) as { data: { role: string } };
